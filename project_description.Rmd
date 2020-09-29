@@ -1,0 +1,45 @@
+---
+title: "Project Guidelines"
+output: html_document
+---
+
+Your final project consists of a written report and a presentation (uploaded to VidGrid), to be turned in instead of a final exam. In this project, you will select a topic, acquire data from one or more sources, and present any interesting findings you might come across as you explore your data.
+
+## Ground rules
+
+- You may work in teams of up to 3 people, but each member of the team should contribute approximately evenly (I will measure this using your git contributions)
+
+- Your dataset(s)
+    - should be fun!
+    - should have at least 1000 records and at least 5 variables
+    - must include at least one meaningful categorical variable and one meaningful numeric variable (these can be derived, if you are e.g. working with text or image data)
+    - must not be published in a textbook or have a published analysis unless 
+        - you get prior permission and 
+        - your analysis is very different from what has previously been published
+    - must be something that you can make available to the entire class (so e.g. proprietary datasets from work or other sources aren't acceptable)
+    - should be on a topic of general interest - something you could discuss with your parents or grandparents
+
+- You should use GitHub to track your project throughout its life cycle. You should commit your changes and push frequently, and before you start working on the project, you should pull (this will minimize merge conflicts). 
+
+- Your work should be reproducible from start to finish. Do not modify the data by hand! I should be able to take the original data and your repository and go through your analysis from start to finish on my own machine.
+
+- You should not have to do any complicated statistical modeling for this project. 
+
+- Your project should use what you have learned (and what you will learn) about data visualization, data wrangling, programming, functions, interactive graphics, and dynamic documents. 
+
+- Your written report should be approximately $2n + 1$ pages (or $450\times(2n + 1)$ words), where $n$ is the number of people in your group. The extra page is to allow you space to describe your dataset, methods, and conclusions. The report should be grammatically correct, factually correct, with appropriate references, including to the software packages you used to create it. 
+
+- Your presentation should include slides (made using beamer, xaringan, or another compiled document) or a poster that highlight(s) the findings you have presented in your report. Each member of your group must participate in the presentation. Your presentation should be approximately $4\times(n+1)$ minutes long.
+
+- You will be expected to peer-evaluate two other groups presentations and/or reports. 
+
+
+## Data Sources
+
+Here are some potential sources of interesting and/or fun data:
+
+- [Data is Plural](https://docs.google.com/spreadsheets/d/1wZhPLMCHKJvwOkP4juclhjFgqIY8fQFMemwKL2c64vk/edit#gid=0) archive
+
+- [TidyTuesday Archive](https://github.com/rfordatascience/tidytuesday)
+
+- [Data.gov](https://catalog.data.gov/dataset) The US government data archive
