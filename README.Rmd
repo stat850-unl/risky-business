@@ -1,6 +1,6 @@
 ---
 title: "Stat 850 Project Description"
-author: "Firstname Lastname, Firstname Lastname, ..."
+author: "Jonah Garbin, Karen Alexander, Jay Jeffries"
 output: github_document
 ---
 
@@ -10,7 +10,6 @@ options(digits = 3)
 ```
 
 ```{r load-sas-libraries, echo = F, message = F, warning = F}
-
 saspath <- "/usr/local/SASHome/SASFoundation/9.4/bin/sas_en" # Your SAS path goes here
 sasopts <- "-ls 75"
 knitr::opts_chunk$set(engine.path=list(sas=saspath, saslog=saspath, sashtml=saspath),
@@ -30,9 +29,39 @@ Once you have received feedback on your project proposal (via Canvas) you may al
 ## Data Set
 Provide a link to your dataset here, and a description of the variables in the data set.
 
+CDC Youth Risk Behavior Survey (YRBS) website:
+https://www.cdc.gov/healthyyouth/data/yrbs/data.htm
+
+Seven kinds of variables are included in the combined datasets:
+• Sample variables (identify records by survey, site type, and survey year)
+• Demographic variables (self-reported demographic characteristics such as age, sex, grade, race)
+• Body mass index (BMI) variables (body mass index %, an obesity indicator, and overweight indicator)
+• Sexual minority variables (sexual identity and the sex of sexual contact with others)
+• 2019 questionnaire variables 
+• 2019 supplemental variables (dichotomous variables of broad interest; e.g. smoking, vaping, etc.)
+• Selected additional risk behavior optional question variables (dichotomized risk behavior variables; e.g. driving under influence)
+
+The dataset itself comes from the Center for Disease Control that has surveyed high school students, since 1991, to identify teen drug use, sex, eating habits, and more. The most recent year of results is 2019, and this dataset stretches across every state of the United States from high schools who have given the CDC permission for use.
+
+The dataset is split as follows:
+-The complete national dataset
+-The dataset from states starting from A to M
+-The dataset from states starting from N to Z
+-District data
+
+Additional background information (p. 2-5) as well as the codebook (p. 5-16) are available here:
+(https://www.cdc.gov/healthyyouth/data/yrbs/pdf/2019/2019_YRBS_SADC_Documentation.pdf) 
+
 ## Potential Topics to Explore Using the Data Set
-Describe avenues you might explore using the data
+1. The timeline trends of cigar/cigarette smoking leading into vaping device smoking
+2. Potential change in relationships between diet/exercise and obesity
+3. How sexual identity changes with grade or age
+4. Trends in opening up about sexual identity through the timeline (e.g. comparing early sexual identities in 1991 to modern sexual identities of 2019)
+5. Trends in various drug use (heroin, cocaine, meth, marijuana)
+6. Interaction of drug use and physical activity
+7. Interactions of drug use and homelessness
+8. Interaction of drug use and NOT seeing a dentist
+(These potential topics are subject to change with the fluidity of our interests)
 
 ## Group Members
-List all of the project contributors here.
-
+Karen Alexander, Jonah Garbin, and Jay Jeffries
