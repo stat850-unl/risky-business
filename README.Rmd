@@ -9,12 +9,18 @@ knitr::opts_chunk$set(echo = FALSE)
 options(digits = 3)
 ```
 
+
 ```{r load-sas-libraries, echo = F, message = F, warning = F}
-saspath <- "/usr/local/SASHome/SASFoundation/9.4/bin/sas_en" # Your SAS path goes here
-sasopts <- "-ls 75"
-knitr::opts_chunk$set(engine.path=list(sas=saspath, saslog=saspath, sashtml=saspath),
-                      engine.opts=list(sas=sasopts, saslog=sasopts, sashtml=sasopts), 
-                      comment=NA)
+saspath <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4\\sas.exe" # Your SAS path goes here
+sasopts <- "-nosplash -ls 75"
+
+# Please leave this in so that I can test it!
+# saspath <- "/usr/local/SASHome/SASFoundation/9.4/bin/sas_en" 
+# sasopts <- "-ls 75"
+knitr::opts_chunk$set(
+  engine.path=list(sas=saspath, saslog=saspath, sashtml=saspath),
+  engine.opts=list(sas=sasopts, saslog=sasopts, sashtml=sasopts),
+  comment=NA)
 library(SASmarkdown)
 ```
 
