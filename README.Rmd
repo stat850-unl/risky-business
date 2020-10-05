@@ -58,6 +58,10 @@ The dataset is split as follows:
 Additional background information (p. 2-5) as well as the codebook (p. 5-16) are available here:
 (https://www.cdc.gov/healthyyouth/data/yrbs/pdf/2019/2019_YRBS_SADC_Documentation.pdf) 
 
+Here is the original source for our data: (https://www.cdc.gov/healthyyouth/data/yrbs/data.htm)
+We have combined the datasets from states starting from A to M and starting with N to Z in order to get all state data in one file (for analysis). Unfortunately, GitHub does not allow us to upload all 147.6 MB of data. Though, we will still be able to analyze the data here in R. 
+
+
 ## Potential Topics to Explore Using the Data Set
 1. The timeline trends of cigar/cigarette smoking leading into vaping device smoking
 2. Potential change in relationships between diet/exercise and obesity
