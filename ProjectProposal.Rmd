@@ -77,3 +77,8 @@ We have combined the datasets from states starting from A to M and starting with
 
 ## Group Members
 Karen Alexander, Jonah Garbin, and Jay Jeffries
+
+```{r}
+yrisk <- read.csv("C:\\Users\\kglue\\Desktop\\My SAS Files\\9.4\\STATS850\\yrs24.csv", header = TRUE, sep = ",")
+```
+
