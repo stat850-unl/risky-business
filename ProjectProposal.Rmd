@@ -229,7 +229,8 @@ proc export data = stat850.yrs23
 	dbms = csv replace;
 run;
 
+
 ```{r}
-yrisk <- read.csv("C:\\Users\\kglue\\Desktop\\My SAS Files\\9.4\\STATS850\\yrs24.csv", header = TRUE, sep = ",")
+yrisk <- read.csv("https://github.com/stat850-unl/risky-business/blob/master/yrs24.csv", header = TRUE, sep = ",")
 ```
 
