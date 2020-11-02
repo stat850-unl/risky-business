@@ -178,7 +178,7 @@ run;
 proc print data = stat850.yrs15 (obs = 10);
 run;
 data stat850.yrs16; set stat850.yrs15;
-drop qnchokeself qncigschool qnchewtobschool qnalcoholschool qntypealcohol2 qnhowmaraijuana qnmaraijuanaschool;
+drop qnchokeself qncigschool qnchewtobschool qnalcoholschool qntypealcohol2 qnhowmarijuana qnmarijuanaschool;
 run;
 proc print data = stat850.yrs16 (obs = 10);
 run;
@@ -216,9 +216,8 @@ run;
 */First several columns are meaningless, they all state the same thing./*
 */That this study was in the US and this is national level data/*
 */Removing it to lower size of file./*
-*/Also misspelled two earler qn codes./*
 data stat850.yrs23; set stat850.yrs22;
-drop sitecode sitename sitetypenum qnhowmarijuana qnmarijuanaschool;
+drop sitecode sitename sitetypenum;
 run;
 proc print data = stat850.yrs23 (obs = 10);
 run;
