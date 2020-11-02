@@ -228,8 +228,19 @@ proc export data = stat850.yrs23
 	dbms = csv replace;
 run;
 
-
 ```{r}
-yrisk <- read.csv("https://github.com/stat850-unl/risky-business/blob/master/yrs24.csv", header = TRUE, sep = ",")
+yrisk <- readr::read_csv("yrs24.csv", guess_max = 400000)
+```
+```{r}
+skimr::skim(yrisk)
 ```
 
+#Delete the 22 variables with no data.
+```{r}
+yrisk <- subset(yrisk, select = -c(qcelldriving, qbullyweight, qbullygender, qbullygay, qchokeself, qtypealcohol2, qcurrentheroin, qcurrentmeth, qprescription30d, qgenderexp, qtaughtsexed, qtaughtstd, qtaughtcondom, qtaughtbc, qdietpop, qcoffeetea, qenergydrink, qsugardrink, qfastfood, qwenthungry, qwheresleep, qtransgender))
+```
+
+# Now rerun skimr with new dataset.
+```{r}
+skimr::skim(yrisk)
+```
