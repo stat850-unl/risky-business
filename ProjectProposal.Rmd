@@ -78,6 +78,12 @@ We have combined the datasets from states starting from A to M and starting with
 ## Group Members
 Karen Alexander, Jonah Garbin, and Jay Jeffries
 
+#Outline of Analyses by Group Members
+Jonah: Plans to conduct Multivariate Analyses (PCA, Cluster, and Discriminant Functions) to narrow the data, and understand how individuals aross years group together
+Jay: Plans to conduct Regression Analyses (Linear Multiple, and Binary Logistic) to consider significant predictors of potential topics listed above
+Karen: Plans to conduct logitudinal analyess (With Subjects ANCOVAs/regression) to consider changes in potential topics listed above over time
+We then plan to do one large regresion involving all three parts: A regression of a topic above predicted by time and the componenets from the PCA
+
 # The following code was used to edit the original data set to a smaller size as it was too large for github. 
 All of this code was done in SAS as SAS could handle the file size.
 libname stat850 'C:\Users\kglue\Desktop\My SAS Files\9.4\STATS850\';
