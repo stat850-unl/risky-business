@@ -6,7 +6,7 @@ library(skimr)
 data <- readr::read_csv("yrs24.csv", guess_max=400000)
 skimr::skim(data)           
 ```
-#Filtering Data by Year to understand non-missing values
+# Filtering Data by Year to understand non-missing values
 ```{R}
 library(dplyr)
 library(skimr)
@@ -47,7 +47,7 @@ data_1995 <- pca.data %>%
   filter(year== "1995")
 skimr::skim(data_1995)
 ```
-#It appears as though odd years are answered for the questionnaire 
+# It appears as though odd years are answered for the questionnaire 
 ```{R}
 library(dplyr)
 library(skimr)
@@ -59,7 +59,7 @@ pca.data <- filter(slim.data, year %in% c(1991,1993, 1995, 1997, 1999, 2001, 200
                                           2019))
 skimr::skim(pca.data)
 ```
-#PCA of Items to Slim Down Variables
+# PCA of Items to Slim Down Variables
 ```{r}
 library(survey)
 library(lavaan)
@@ -76,3 +76,5 @@ pca <- svyprcomp(~q8+q9+q12+q13+q15+q16+q17+q18
 #rotation <- oblqRotate(pca, method="oblimin")
 #rotation
 ```
+
+> Just keep in mind that by using PCA you're making it much harder to interpret the variables :). I know, I know, PCA is the best tool in the toolbox for psych :-p but it's nice when your numerical results have a tangible meaning.
