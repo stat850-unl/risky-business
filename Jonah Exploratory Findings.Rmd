@@ -1,0 +1,80 @@
+# Read the Data into R
+```{r}
+install.packages("survey")
+library(survey)
+library(skimr)
+data <- readr::read_csv("yrs24.csv", guess_max=400000)
+skimr::skim(data)           
+```
+# Filtering Data by Year to understand non-missing values
+```{R}
+library(dplyr)
+library(skimr)
+pca.data <- select(data, year, PSU, 23:102)
+data_1991 <- pca.data %>%
+  filter(year== "1991")
+skimr::skim(data_1991)
+```
+```{R}
+library(dplyr)
+library(skimr)
+pca.data <- select(data, year, PSU, 23:102)
+data_1992 <- pca.data %>%
+  filter(year== "1992")
+skimr::skim(data_1992)
+```
+```{R}
+library(dplyr)
+library(skimr)
+pca.data <- select(data, year, PSU, 23:102)
+data_1993 <- pca.data %>%
+  filter(year== "1993")
+skimr::skim(data_1993)
+```
+```{R}
+library(dplyr)
+library(skimr)
+pca.data <- select(data, year, PSU, 23:102)
+data_1994 <- pca.data %>%
+  filter(year== "1994")
+skimr::skim(data_1994)
+```
+```{R}
+library(dplyr)
+library(skimr)
+pca.data <- select(data, year, PSU, 23:102)
+data_1995 <- pca.data %>%
+  filter(year== "1995")
+skimr::skim(data_1995)
+```
+# It appears as though odd years are answered for the questionnaire 
+```{R}
+library(dplyr)
+library(skimr)
+slim.data <- select(data, year, PSU, weight, stratum, c(23,24,27,28,30,31,32,33,41,42,43,44,45,47,
+                                  48,55,56,60,61,62,65,66,70,71,72,73,74,75,
+                                  76,77,78,79,80,81,82,83,96))
+pca.data <- filter(slim.data, year %in% c(1991,1993, 1995, 1997, 1999, 2001, 2003,
+                                          2005, 2007, 2009, 2011, 2013, 2015, 2017,
+                                          2019))
+skimr::skim(pca.data)
+```
+# PCA of Items to Slim Down Variables
+```{r}
+library(survey)
+library(lavaan)
+library(GPArotation)
+yrbsdes <- svydesign(id=~PSU, weight=~weight,
+strata=~stratum,
+data=pca.data, nest=TRUE) 
+pca <- svyprcomp(~q8+q9+q12+q13+q15+q16+q17+q18
+                 +q26+q27+q28+q29+q30+q32+q33+q40
+                 +q41+q45+q46+q47+q50+q51+q55+q56
+                 +q57+q58+q59+q60+q61+q62+q63+q64
+                 +q67+q68+q69+q70+q83
+                 ,design=yrbsdes,scale=TRUE, scores=TRUE)
+#rotation <- oblqRotate(pca, method="oblimin")
+#rotation
+```
+
+> Just keep in mind that by using PCA you're making it much harder to interpret the variables :). I know, I know, PCA is the best tool in the toolbox for psych :-p but it's nice when your numerical results have a tangible meaning.
