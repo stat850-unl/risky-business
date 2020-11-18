@@ -78,7 +78,16 @@ We have combined the datasets from states starting from A to M and starting with
 ## Group Members
 Karen Alexander, Jonah Garbin, and Jay Jeffries
 
+#Outline of Analyses by Group Members
+Jonah: Plans to conduct Multivariate Analyses (PCA, Cluster, and Discriminant Functions) to narrow the data, and understand how individuals aross years group together
+Jay: Plans to conduct Regression Analyses (Linear Multiple, and Binary Logistic) to consider significant predictors of potential topics listed above
+Karen: Plans to conduct logitudinal analyess (With Subjects ANCOVAs/regression) to consider changes in potential topics listed above over time
+We then plan to do one large regresion involving all three parts: A regression of a topic above predicted by time and the componenets from the PCA
+
 # The following code was used to edit the original data set to a smaller size as it was too large for github. 
+<<<<<<< HEAD
+
+
 All of this code was done in SAS as SAS could handle the file size.
 ```{SAS Markdown}
 libname stat850 'C:\Users\kglue\Desktop\My SAS Files\9.4\STATS850\';
@@ -228,6 +237,20 @@ proc export data = stat850.yrs23
 	outfile = "C:\Users\kglue\Desktop\My SAS Files\9.4\STATS850\yrs24.csv"
 	dbms = csv replace;
 run;
+=======
+All of this code was done in SAS as SAS could handle the file size. 
+
+> I've moved the code to cleaning_code.sas, which you can then reference. Please describe how you got the original data (e.g. downloaded from XXX site using YYY options) and then you can say "A script for reducing the data to the variables of interest is provided in cleaning_code.sas". The resulting data file, yrs24.csv, contains the following: <describe what you left in>
+
+>>>>>>> f30373f7aefed20de6efb7545dd89ad84b99457c
+The original code was downloaded from the following website: https://www.cdc.gov/healthyyouth/data/yrbs/data.htm
+The combined Youth Risk Behavior Survey (YRBS) data was downloaded as .... The Combined Data Set's User Guide ;and the Software Analysis for YRBS were downloaded as pdfs. 
+
+A script for reducing the data to variables of interest is provided in cleaning_code.sas. The resulting data file, yrs24,csv, contains national survey results from 1991 - 2019. The survey is conducted in odd numbered years and the national results in the file include weighted results as a complex sampling method is used. 
+
+yrs24.csv was found to contain 22 variables with no data. Those variables were removed and the new data set was named yrisk. yrisk contains the year in which the question was asked, the sampling stratum, corresponding stratum weight and the linking variable. What is remaining in our file is data by state. Not all 50 states are included each year as inclusion of data from a state is dependent upon the state sharing the survey results with the CDC. The survey includes student demographics such as age, sex, grade, and race. Because of the changes in how race has been recorded there were originally four options for race and since 2007 there have been seven options, see https://www.cdc.gov/healthyyouth/data/yrbs/pdf/2019/2019_National_YRBS_Data_Users_Guide.pdf. 
+
+The survey questions can be somewhat categorized into the following categories: height, weight, BMI, driving habits (q8 - q11), weapon carrying (q13 - q16), fighting (q17 - q18), dating violence (q19 - q22), bullying (q23 - q24), suicide (q25 - q29), tobacco use (q30 - q39), alcohol use (q40 - q44), marijuana use (q45 - q48), drug use (q49 - q57), sexual behaviors (q58 - q64), weight (q67 - q68), eating and drinking habits (q69 - q77), physical activity (q78 - q83), health care (q84 - q87), sleeping habits (q88), and grades in school (q89). These questions are then followed by questions that are not categorized, but represent risk. For example, qbikehelmet, asks about the frequency in which a youth wears a bike helmet when riding a bike. 
 
 ```{r}
 yrisk <- readr::read_csv("yrs24.csv", guess_max = 400000)
@@ -236,12 +259,77 @@ yrisk <- readr::read_csv("yrs24.csv", guess_max = 400000)
 skimr::skim(yrisk)
 ```
 
-#Delete the 22 variables with no data.
+# Delete the 22 variables with no data.
 ```{r}
 yrisk <- subset(yrisk, select = -c(qcelldriving, qbullyweight, qbullygender, qbullygay, qchokeself, qtypealcohol2, qcurrentheroin, qcurrentmeth, qprescription30d, qgenderexp, qtaughtsexed, qtaughtstd, qtaughtcondom, qtaughtbc, qdietpop, qcoffeetea, qenergydrink, qsugardrink, qfastfood, qwenthungry, qwheresleep, qtransgender))
+# You might be able to use e.g. colSums(!is.na(.)) to pick these columns out automatically :)
 ```
 
 # Now rerun skimr with new dataset.
 ```{r}
 skimr::skim(yrisk)
 ```
+
+# Need to download survey package due to complex sampling used in survey.
+```{r}
+install.packages("survey")
+library(survey)
+```
+
+```{r}
+skimr::skim(yrisk)
+```
+
+# Want to graph output by year to see any longitudinal trends. 
+```{r}
+yrbsdes <- svydesign(id=~PSU, weight=~weight, strata=~stratum,data=yrisk, nest=TRUE)
+```
+
+#Summarize Data by Question and Year
+```{r}
+library(dplyr)
+gyear <- yrisk %>%
+  mutate(year) %>%
+  select(year, age, sex, grade, race4, race7, stheight, stweight, bmi, bmipct, q8, q9, q10)
+```
+
+```{r}
+grouped_gyear <- gyear %>%
+  group_by(year)
+grouped_gyear
+```
+  
+```{r}
+install.packages("psych")
+library(psych)
+library(tidyverse)
+
+myfun <- function(value) {
+  x <- na.omit(value)
+  tibble::tibble(mean = mean(x), min = min(x), max = max(x), sd = sd(x))
+}
+
+tmp <- grouped_gyear %>%
+  tidyr::pivot_longer(cols = matches("q")) %>%
+  filter(year == 1991, name == "q8")
+
+grouped_gyear %>%
+  tidyr::pivot_longer(cols = matches("q")) %>%
+  dplyr::group_by(year, name) %>%
+  dplyr::mutate(stat = purrr::map(value, myfun))
+
+describe.by(grouped_gyear, group=year, mean, SD, median, min, max)
+```
+
+gyear <-  yrisk %>%
+  group_by(year)
+  summarise(avg = mean(q8:q86))
+```
+
+```{R}
+library(ggplot2)
+library(dplyr)
+ggplot(yrisk, aes(x = q8, y = year)) +
+  geom_boxplot(color = "blue")
+```             
+
