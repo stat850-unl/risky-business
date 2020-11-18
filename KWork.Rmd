@@ -1,0 +1,587 @@
+# Read the Data into R
+```{r}
+library(survey)
+library(skimr)
+data <- readr::read_csv("yrs24.csv", guess_max=400000)
+skimr::skim(data)
+data$record
+```
+#Filtering Data by Year to understand non-missing values
+```{R}
+library(dplyr)
+library(skimr)
+data.91 <- select(data, year, PSU, 23:102)
+data_1991 <- data.91 %>%
+install.packages("survey")
+library(survey)
+library(skimr)
+data <- readr::read_csv("yrs24.csv", guess_max=400000)
+skimr::skim(data)           
+```
+# Filtering Data by Year to understand non-missing values
+```{R}
+library(dplyr)
+library(skimr)
+pca.data <- select(data, year, PSU, 23:102)
+data_1991 <- pca.data %>%
+  filter(year== "1991")
+skimr::skim(data_1991)
+```
+```{R}
+library(dplyr)
+library(skimr)
+data.92 <- select(data, year, PSU, 23:102)
+data_1992 <- data.92 %>%
+pca.data <- select(data, year, PSU, 23:102)
+data_1992 <- pca.data %>%
+  filter(year== "1992")
+skimr::skim(data_1992)
+```
+
+```{R}
+library(dplyr)
+library(skimr)
+data.93 <- select(data, year, PSU, 23:102)
+data_1993 <- data.93 %>%
+pca.data <- select(data, year, PSU, 23:102)
+data_1993 <- pca.data %>%
+  filter(year== "1993")
+skimr::skim(data_1993)
+```
+
+```{R}
+library(dplyr)
+library(skimr)
+data.94 <- select(data, year, PSU, 23:102)
+data_1994 <- data.94 %>%
+pca.data <- select(data, year, PSU, 23:102)
+data_1994 <- pca.data %>%
+filter(year== "1994")
+skimr::skim(data_1994)
+```
+
+```{R}
+library(dplyr)
+library(skimr)
+data.95 <- select(data, year, PSU, 23:102)
+data_1995 <- data.95 %>%
+  filter(year== "2019")
+skimr::skim(data_1995)
+```
+#It appears as though odd years are answered for the questionnaire 
+```{R}
+library(dplyr)
+library(skimr)
+slim.data <- select(data, year, c(23,24,27,28,30,31,32,33,41,42,43,44,45,47,
+                                                        48,55,56,60,61,62,65,66,70,71,72,73,74,75,
+                                                        76,77,78,79,80,81,82,83,96))
+
+pca.data <- filter(slim.data, year %in% c(1991,1993, 1995, 1997, 1999, 2001, 2003,
+                                          2005, 2007, 2009, 2011, 2013, 2015, 2017,
+                                          2019))
+
+pca.data <- subset(pca.data, select = -c(year))
+skimr::skim(pca.data)
+```
+#PCA of Items to Slim Down Variables
+```{r}
+library(psych)
+fit <- principal(pca.data, nfactors=17, rotate="oblimin")
+summary(fit)
+fit
+```
+
+#Now that we know componenets, need to recode variables, and build components
+```{r}
+pca.data$q29new[pca.data$q29==1] <- 1
+pca.data$q29new[pca.data$q29==2] <- 3
+pca.data$q29new[pca.data$q29==3] <- 2
+
+pca.data$q46new[pca.data$q46==1] <- 1
+pca.data$q46new[pca.data$q46==2] <- 7
+pca.data$q46new[pca.data$q46==3] <- 6
+pca.data$q46new[pca.data$q46==4] <- 5
+pca.data$q46new[pca.data$q46==5] <- 4
+pca.data$q46new[pca.data$q46==6] <- 3
+pca.data$q46new[pca.data$q46==7] <- 2
+
+pca.data$q58new[pca.data$q58==1] <- 2
+pca.data$q58new[pca.data$q58==2] <- 1
+
+pca.data$q59new[pca.data$q59==1] <- 1
+pca.data$q59new[pca.data$q59==2] <- 8
+pca.data$q59new[pca.data$q59==3] <- 7
+pca.data$q59new[pca.data$q59==4] <- 6
+pca.data$q59new[pca.data$q59==5] <- 5
+pca.data$q59new[pca.data$q59==6] <- 4
+pca.data$q59new[pca.data$q59==7] <- 3
+pca.data$q59new[pca.data$q59==8] <- 2
+
+pca.data$q62new[pca.data$q62==1] <- 1
+pca.data$q62new[pca.data$q62==2] <- 3
+pca.data$q62new[pca.data$q62==3] <- 2
+
+pca.data$q64new[pca.data$q64==1] <- 1
+pca.data$q64new[pca.data$q64==6] <- 2
+pca.data$q64new[pca.data$q64==5] <- 3
+pca.data$q64new[pca.data$q64==3] <- 4
+pca.data$q64new[pca.data$q64==4] <- 5
+pca.data$q64new[pca.data$q64==7] <- 6
+pca.data$q64new[pca.data$q64==8] <- 7
+pca.data$q64new[pca.data$q64==2] <- 8
+
+pca.data$Sexual_Activity_Behavior = pca.data$q58new + pca.data$q59new + pca.data$q60 + pca.data$q61 + pca.data$q62 + pca.data$q63 + pca.data$q64new
+
+pca.data$Marijuana_Use_Behavior = pca.data$q45 +  pca.data$q46new +  pca.data$q47
+
+pca.data$Cigarette_Smoking_Behavior = pca.data$q32 + pca.data$q33
+
+pca.data$Other_Drug_Use = pca.data$q50 + pca.data$q51 + pca.data$q55 + pca.data$q56
+
+pca.data$Suicide_Attempt_Behavior = pca.data$q28 + pca.data$q29new
+
+pca.data$Weapon_Carrying_Behavior = pca.data$q12 + pca.data$q13
+
+pca.data
+```
+#Now, create the original data set, with the new variables and componenets included
+```{R}
+yrisk <- merge(data,pca.data, all.x=TRUE)
+yrisk
+```
+
+#Summarize Data by Question and Year
+```{r}
+library(dplyr)
+gyear <- yrisk %>%
+  mutate(year) %>%
+  select(year, age, sex, grade, stheight, stweight, bmi, bmipct, q8, q9, q12, q13, q15, q16, q17, q18, q26, q27, q28, q29, q30, q32, q33, q40, q41, q45, q46, q47, q50, q51, q55, q56, q57, q58, q59, q60, q61, q62, q63, q64, q67, q68, q69, q70, q83)
+```
+
+```{r}
+grouped_gyear <- gyear %>%
+  group_by(year)
+grouped_gyear
+```
+
+# Means of questions identified by PCA by year. 
+```{r}
+library(tidyverse)
+
+myearq8 <- grouped_gyear %>%
+  select(year, q8) %>%
+  group_by(year) %>%
+  drop_na(q8) %>%
+  summarise(avg = mean(q8))
+myearq8
+```
+
+```{r}
+library(tidyverse)
+
+myearq9 <- grouped_gyear %>%
+  select(year, q9) %>%
+  group_by(year) %>%
+  drop_na(q9) %>%
+  summarise(avg = mean(q9))
+myearq9
+```
+
+```{r}
+library(tidyverse)
+
+myearq12 <- grouped_gyear %>%
+  select(year, q12) %>%
+  group_by(year) %>%
+  drop_na(q12) %>%
+  summarise(avg = mean(q12))
+myearq12
+```
+
+```{r}
+library(tidyverse)
+
+myearq13 <- grouped_gyear %>%
+  select(year, q13) %>%
+  group_by(year) %>%
+  drop_na(q13) %>%
+  summarise(avg = mean(q13))
+myearq13
+```
+
+```{r}
+library(tidyverse)
+
+myearq15 <- grouped_gyear %>%
+  select(year, q15) %>%
+  group_by(year) %>%
+  drop_na(q15) %>%
+  summarise(avg = mean(q15))
+myearq15
+```
+
+```{r}
+library(tidyverse)
+
+myearq16 <- grouped_gyear %>%
+  select(year, q16) %>%
+  group_by(year) %>%
+  drop_na(q16) %>%
+  summarise(avg = mean(q16))
+myearq16
+```
+
+```{r}
+library(tidyverse)
+
+myearq17 <- grouped_gyear %>%
+  select(year, q17) %>%
+  group_by(year) %>%
+  drop_na(q17) %>%
+  summarise(avg = mean(q17))
+myearq17
+```
+
+```{r}
+library(tidyverse)
+
+myearq18 <- grouped_gyear %>%
+  select(year, q18) %>%
+  group_by(year) %>%
+  drop_na(q18) %>%
+  summarise(avg = mean(q18))
+myearq18
+```
+
+```{r}
+library(tidyverse)
+
+myearq26 <- grouped_gyear %>%
+  select(year, q26) %>%
+  group_by(year) %>%
+  drop_na(q26) %>%
+  summarise(avg = mean(q26))
+myearq26
+```
+
+```{r}
+library(tidyverse)
+
+myearq27 <- grouped_gyear %>%
+  select(year, q27) %>%
+  group_by(year) %>%
+  drop_na(q27) %>%
+  summarise(avg = mean(q27))
+myearq27
+```
+
+```{r}
+library(tidyverse)
+
+myearq28 <- grouped_gyear %>%
+  select(year, q28) %>%
+  group_by(year) %>%
+  drop_na(q28) %>%
+  summarise(avg = mean(q28))
+myearq28
+```
+
+```{r}
+library(tidyverse)
+
+myearq29 <- grouped_gyear %>%
+  select(year, q29) %>%
+  group_by(year) %>%
+  drop_na(q29) %>%
+  summarise(avg = mean(q29))
+myearq29
+```
+
+```{r}
+library(tidyverse)
+
+myearq30 <- grouped_gyear %>%
+  select(year, q30) %>%
+  group_by(year) %>%
+  drop_na(q30) %>%
+  summarise(avg = mean(q30))
+myearq30
+```
+
+```{r}
+library(tidyverse)
+
+myearq32 <- grouped_gyear %>%
+  select(year, q32) %>%
+  group_by(year) %>%
+  drop_na(q32) %>%
+  summarise(avg = mean(q32))
+myearq32
+```
+
+```{r}
+library(tidyverse)
+
+myearq33 <- grouped_gyear %>%
+  select(year, q33) %>%
+  group_by(year) %>%
+  drop_na(q33) %>%
+  summarise(avg = mean(q33))
+myearq33
+```
+
+```{r}
+library(tidyverse)
+
+myearq40 <- grouped_gyear %>%
+  select(year, q40) %>%
+  group_by(year) %>%
+  drop_na(q40) %>%
+  summarise(avg = mean(q40))
+myearq40
+```
+
+```{r}
+library(tidyverse)
+
+myearq41 <- grouped_gyear %>%
+  select(year, q41) %>%
+  group_by(year) %>%
+  drop_na(q41) %>%
+  summarise(avg = mean(q41))
+myearq41
+```
+
+```{r}
+library(tidyverse)
+
+myearq45 <- grouped_gyear %>%
+  select(year, q45) %>%
+  group_by(year) %>%
+  drop_na(q45) %>%
+  summarise(avg = mean(q45))
+myearq45
+```
+
+```{r}
+library(tidyverse)
+
+myearq46 <- grouped_gyear %>%
+  select(year, q46) %>%
+  group_by(year) %>%
+  drop_na(q46) %>%
+  summarise(avg = mean(q46))
+myearq46
+```
+
+```{r}
+library(tidyverse)
+
+myearq47 <- grouped_gyear %>%
+  select(year, q47) %>%
+  group_by(year) %>%
+  drop_na(q47) %>%
+  summarise(avg = mean(q47))
+myearq47
+```
+
+```{r}
+library(tidyverse)
+
+myearq50 <- grouped_gyear %>%
+  select(year, q50) %>%
+  group_by(year) %>%
+  drop_na(q50) %>%
+  summarise(avg = mean(q50))
+myearq50
+```
+
+```{r}
+library(tidyverse)
+
+myearq51 <- grouped_gyear %>%
+  select(year, q51) %>%
+  group_by(year) %>%
+  drop_na(q51) %>%
+  summarise(avg = mean(q51))
+myearq51
+```
+
+```{r}
+library(tidyverse)
+
+myearq55 <- grouped_gyear %>%
+  select(year, q55) %>%
+  group_by(year) %>%
+  drop_na(q55) %>%
+  summarise(avg = mean(q55))
+myearq55
+```
+
+```{r}
+library(tidyverse)
+
+myearq56 <- grouped_gyear %>%
+  select(year, q56) %>%
+  group_by(year) %>%
+  drop_na(q56) %>%
+  summarise(avg = mean(q56))
+myearq56
+```
+
+```{r}
+library(tidyverse)
+
+myearq57 <- grouped_gyear %>%
+  select(year, q57) %>%
+  group_by(year) %>%
+  drop_na(q57) %>%
+  summarise(avg = mean(q57))
+myearq57
+```
+
+```{r}
+library(tidyverse)
+
+myearq58 <- grouped_gyear %>%
+  select(year, q58) %>%
+  group_by(year) %>%
+  drop_na(q58) %>%
+  summarise(avg = mean(q58))
+myearq58
+```
+
+```{r}
+library(tidyverse)
+
+myearq59 <- grouped_gyear %>%
+  select(year, q59) %>%
+  group_by(year) %>%
+  drop_na(q59) %>%
+  summarise(avg = mean(q59))
+myearq59
+```
+
+```{r}
+library(tidyverse)
+
+myearq60 <- grouped_gyear %>%
+  select(year, q60) %>%
+  group_by(year) %>%
+  drop_na(q60) %>%
+  summarise(avg = mean(q60))
+myearq60
+```
+
+```{r}
+library(tidyverse)
+
+myearq61 <- grouped_gyear %>%
+  select(year, q61) %>%
+  group_by(year) %>%
+  drop_na(q61) %>%
+  summarise(avg = mean(q61))
+myearq61
+```
+
+```{r}
+library(tidyverse)
+
+myearq62 <- grouped_gyear %>%
+  select(year, q62) %>%
+  group_by(year) %>%
+  drop_na(q62) %>%
+  summarise(avg = mean(q62))
+myearq62
+```
+
+```{r}
+library(tidyverse)
+
+myearq63 <- grouped_gyear %>%
+  select(year, q63) %>%
+  group_by(year) %>%
+  drop_na(q63) %>%
+  summarise(avg = mean(q63))
+myearq63
+```
+
+```{r}
+library(tidyverse)
+
+myearq64 <- grouped_gyear %>%
+  select(year, q64) %>%
+  group_by(year) %>%
+  drop_na(q64) %>%
+  summarise(avg = mean(q64))
+myearq64
+```
+
+```{r}
+library(tidyverse)
+
+myearq67 <- grouped_gyear %>%
+  select(year, q67) %>%
+  group_by(year) %>%
+  drop_na(q67) %>%
+  summarise(avg = mean(q67))
+myearq67
+```
+
+```{r}
+library(tidyverse)
+
+myearq68 <- grouped_gyear %>%
+  select(year, q68) %>%
+  group_by(year) %>%
+  drop_na(q68) %>%
+  summarise(avg = mean(q68))
+myearq68
+```
+
+```{r}
+library(tidyverse)
+
+myearq69 <- grouped_gyear %>%
+  select(year, q69) %>%
+  group_by(year) %>%
+  drop_na(q69) %>%
+  summarise(avg = mean(q69))
+myearq69
+```
+
+```{r}
+library(tidyverse)
+
+myearq70 <- grouped_gyear %>%
+  select(year, q70) %>%
+  group_by(year) %>%
+  drop_na(q70) %>%
+  summarise(avg = mean(q70))
+myearq70
+```
+
+```{r}
+library(tidyverse)
+
+myearq83 <- grouped_gyear %>%
+  select(year, q83) %>%
+  group_by(year) %>%
+  drop_na(q83) %>%
+  summarise(avg = mean(q83))
+myearq83
+```
+
+# Graph means across years for PCA identified questions.
+```{r}
+library(ggplot2)
+library(dplyr) 
+gq8 <-ggplot(myearq8, aes(x = year, y = avg)) + 
+  geom_line(aes(color = "blue", linetype = "solid")) + 
+  geom_point(aes(color = "blue")) +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019))
+gq8 <- gq8 + labs(title = "How often do you wear a seatbelt when riding in a car driven by someone else?", x = "Year", y = "Average 4.0 = Most of the Time 5.0 = Always") +
+  theme(legend.position = 'none')
+gq8
+```
+
