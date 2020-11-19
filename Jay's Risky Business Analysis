@@ -1,0 +1,417 @@
+---
+title: "Risky Business Analysis"
+author: "Karen Alexander, Jonah Garben, Jay Jeffries"
+date: "11/19/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{R}
+if(!require(survey)){
+    install.packages("survey")
+    library(survey)
+}
+if(!require(mitools)){
+  install.packages("mitools)")
+  library(mitools)
+}
+if(!require(psych)){
+    install.packages("psych")
+    library(psych)
+}
+if(!require(skimr)){
+    install.packages("skimr")
+    library(skimr)
+}
+if(!require(aod)){
+    install.packages("aod")
+    library(aod)
+}
+if(!require(Matrix)){
+    install.packages("Matrix")
+    library(Matrix)
+}
+if(!require(corrplot)){
+    install.packages("corrplot")
+    library(corrplot)
+}
+if(!require(dplyr)){
+    install.packages("dplyr")
+    library(dplyr)
+}
+```
+
+# Reading the data into R
+```{R}
+library(psych)
+library(dplyr)
+data <- readr::read_csv("yrs24.csv", guess_max=400000)
+slim.data <- select(data, year, c(23,24,27,28,30,31,32,33,41,42,43,44,45,47,
+                                                        48,55,56,60,61,62,65,66,70,71,72,73,74,75,
+                                                        76,77,78,79,80,81,82,83,96))
+pca.data <- filter(slim.data, year %in% c(1991,1993, 1995, 1997, 1999, 2001, 2003,
+                                          2005, 2007, 2009, 2011, 2013, 2015, 2017,
+                                          2019))
+pca.data <- subset(pca.data, select = -c(year))
+skimr::skim(pca.data)
+```
+
+# Principal Component Analysis - PCA
+```{R}
+fit <- principal(pca.data, nfactors=17, rotate="oblimin")
+summary(fit)
+fit
+```
+
+```{R}
+pca.data$q29new[pca.data$q29==1] <- 1
+pca.data$q29new[pca.data$q29==2] <- 3
+pca.data$q29new[pca.data$q29==3] <- 2
+pca.data$q46new[pca.data$q46==1] <- 1
+pca.data$q46new[pca.data$q46==2] <- 7
+pca.data$q46new[pca.data$q46==3] <- 6
+pca.data$q46new[pca.data$q46==4] <- 5
+pca.data$q46new[pca.data$q46==5] <- 4
+pca.data$q46new[pca.data$q46==6] <- 3
+pca.data$q46new[pca.data$q46==7] <- 2
+pca.data$q58new[pca.data$q58==1] <- 2
+pca.data$q58new[pca.data$q58==2] <- 1
+pca.data$q59new[pca.data$q59==1] <- 1
+pca.data$q59new[pca.data$q59==2] <- 8
+pca.data$q59new[pca.data$q59==3] <- 7
+pca.data$q59new[pca.data$q59==4] <- 6
+pca.data$q59new[pca.data$q59==5] <- 5
+pca.data$q59new[pca.data$q59==6] <- 4
+pca.data$q59new[pca.data$q59==7] <- 3
+pca.data$q59new[pca.data$q59==8] <- 2
+pca.data$q62new[pca.data$q62==1] <- 1
+pca.data$q62new[pca.data$q62==2] <- 3
+pca.data$q62new[pca.data$q62==3] <- 2
+pca.data$q64new[pca.data$q64==1] <- 1
+pca.data$q64new[pca.data$q64==6] <- 2
+pca.data$q64new[pca.data$q64==5] <- 3
+pca.data$q64new[pca.data$q64==3] <- 4
+pca.data$q64new[pca.data$q64==4] <- 5
+pca.data$q64new[pca.data$q64==7] <- 6
+pca.data$q64new[pca.data$q64==8] <- 7
+pca.data$q64new[pca.data$q64==2] <- 8
+pca.data$Sexual_Activity_Behavior = pca.data$q58new + pca.data$q59new + pca.data$q60 + pca.data$q61 + pca.data$q62 + pca.data$q63 + pca.data$q64new
+pca.data$Marijuana_Use_Behavior = pca.data$q45 +  pca.data$q46new +  pca.data$q47
+pca.data$Cigarette_Smoking_Behavior = pca.data$q32 + pca.data$q33
+pca.data$Other_Drug_Use = pca.data$q50 + pca.data$q51 + pca.data$q55 + pca.data$q56
+pca.data$Suicide_Attempt_Behavior = pca.data$q28 + pca.data$q29new
+pca.data$Weapon_Carrying_Behavior = pca.data$q12 + pca.data$q13
+```
+# Merging original (cleaned) data and PCA data together
+```{R}
+yrisk <- merge(data, pca.data, all.x=TRUE)
+yrisk
+```
+# Multiple Regression
+## Multiple regressions to see what variables explain PCA components. First, Sexual Activity
+```{R}
+Sexual_Activity <- lm(Sexual_Activity_Behavior ~ age + sex + year + grade, data = yrisk)
+summary(Sexual_Activity)
+```
+### Just under 4% of this component is explained by teen age, sex, grade, and the year in which the data was collected. 
+
+## Next, Marijuana Use
+```{R}
+Marijuana_Use <- lm(Marijuana_Use_Behavior ~ age + sex + year + grade, data = yrisk)
+summary(Marijuana_Use)
+```
+### A mere 2% of the marijuana component is explained by these same variables.
+
+## Next, cigarette smoking:
+```{R}
+Cig_Use <- lm(Cigarette_Smoking_Behavior ~ age + sex + year + grade, data = yrisk)
+summary(Cig_Use)
+```
+### Sligtly over 2% of cigarette use component is explained by these behaviors.
+
+## Next, other drug use:
+```{R}
+Drug_Use <- lm(Other_Drug_Use ~ age + sex + year + grade, data = yrisk)
+summary(Drug_Use)
+```
+### Less than 0.5% of other drug use component is explained by these characteristic variables.
+
+## Next, other suicide attempts:
+```{R}
+Suicide <- lm(Suicide_Attempt_Behavior ~ age + sex + year + grade, data = yrisk)
+summary(Suicide)
+```
+### These variables do not explain this component very well..
+
+## Next, other weapon use:
+```{R}
+Weapon_Use <- lm(Weapon_Carrying_Behavior ~ age + sex + year + grade, data = yrisk)
+summary(Weapon_Use)
+```
+### Just around 2% of teen weapon use is explained by age, grade, sex, and year of data collection.
+
+Evidently, the demographic-type variables involved in this survey did not predict any of the PCA components sufficiently (above 4% explanation).
+
+# Moving away from components.. But sticking with multiple regression!
+## Here I am running a multiple regression to see how well the items for sexual activity predict sexual intercourse behavior.
+```{R}
+library(skimr)
+library(ggplot2)
+library(aod)
+
+# yrisk$q58 was changed so that 2 (no) = 0, and 1 (yes) remains 1
+yrisk$q58[yrisk$q58==2] <- 0
+
+# Binomial GLM used for logistic regression
+sexual_activity_logit <- glm(q58 ~ age + sex + grade + year + q66, data = yrisk, family = "binomial")
+summary(sexual_activity_logit)
+
+# Trying normal multiple linear regression for the fun of it
+sexual_activity_lm <- lm(q58 ~ age + sex + year + q66, data = yrisk)
+summary(sexual_activity_lm)
+```
+### Residual plots from sexual behavior multiple regression
+```{R}
+# These are funky due to categorical nature of data
+layout(matrix(c(1,2,3,4),2,2))
+plot(sexual_activity_logit)
+```
+### Looking at (plotting) the correlations between variables
+```{R}
+# Analyzing these variable's correlations
+yrisksex <- yrisk %>% select(q58, age, sex, year, q66)
+library(Matrix)
+library(corrplot)
+corr.sex <- cor(yrisksex, use = "pairwise.complete.obs")
+corr.sex
+corr.sex[lower.tri(corr.sex, diag = TRUE)] <- NA
+corrplot(corr.sex, method = "number", type = "upper", diag = FALSE)
+```
+## Typically, I would offer scatterplots with regression lines, but the scatterplots make no sense because of the non-continuous data. Instead, I used bar graphs to elicit the relationship of the previous variables (sex, age, grade, sexid) and whether or not sexual intercourse has occurred.
+```{R}
+# Sexually Inactive by Age
+age1_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Sexual Activity") +
+  labs(x = "Sexually Inactive", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(2, 2, 1), limits = c(1.5, 2.25)) +
+    scale_y_continuous(breaks = seq(0, 260000, 10000), limits = c(0, 260000))
+age1_sexbar
+
+# Sexually Active by Age
+age2_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Sexual Activity") +
+  labs(x = "Sexually Active", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.25)) +
+    scale_y_continuous(breaks = seq(0, 33000, 1500), limits = c(0, 32000))
+age2_sexbar
+
+# Sexually Active Male or Female
+sex1_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(sex))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex", values = c("1" = "pink", "2" = "blue"), labels = c("female", "male")) +
+  ggtitle("Bar Graph of Sex and Sexual Activity") +
+  labs(x = "Sexually Active", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.25)) +
+  scale_y_continuous(breaks = seq(0, 55000, 10000), limits = c(0, 55000))
+sex1_sexbar
+
+# Sexually Inactive Male or Female
+sex2_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(sex))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex", values = c("1" = "pink", "2" = "blue"), labels = c("female", "male")) +
+  ggtitle("Bar Graph of Sex and Sexual Activity") +
+  labs(x = "Sexually Inactive", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(2, 2, 1), limits = c(1.5, 2.25)) +
+  scale_y_continuous(breaks = seq(0, 550000, 50000), limits = c(0, 550000))
+sex2_sexbar
+
+# Sexually Inactive Teen Sex ID
+sexid_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(q66))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex ID", values = c('#a6cee3', '#fc8d62', '#d95f02', '#ffffb3'), labels = c("Heterosexual", "Gay or Lesbian", "Bisexual", "I don't know")) +
+  ggtitle("Bar Graph of Sex ID and Sexual Activity") +
+  labs(x = "Sexually Inactive Teens", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 14000, 1000), limits = c(0, 14000))
+sexid_sexbar
+
+# Sexually Active Teen Sex ID
+sexid_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(q66))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex ID", values = c('#a6cee3', '#fc8d62', '#d95f02', '#ffffb3'), labels = c("Heterosexual", "Gay or Lesbian", "Bisexual", "I don't know")) +
+  ggtitle("Bar Graph of Sex ID and Sexual Activity") +
+  labs(x = "Sexually Active Teens", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(2, 2, 1), limits = c(1.5, 2.5)) +
+  scale_y_continuous(breaks = seq(0, 160000, 10000), limits = c(0, 160000))
+sexid_sexbar
+```
+## Running a multiple regression to see how well the items for marijuana activity predict marijuana activity behavior.
+```{R}
+# Once again making certain variables factors, as they are categorical in nature (not continuous)
+yrisk$q45[yrisk$q45 == 2|3|4|5] <- 1 # 1 = If ANY marijuana use occurred
+yrisk$q45[yrisk$q45 == 1] <- 0 # 0 = Absence of any marijuana use
+
+#yrisk$q45 = "During your life, how many times have you used marijuana?"
+#yrisk$q46new = "How old were you when you tried marijuana for the first time?"
+#yrisk$q47 = "During the past 30 days, how many times did you use marijuana?"
+
+# Binomial GLM used for logistic regression
+marijuana_use_fit <- glm(q45 ~ age + sex + grade + year + q46new + q47, data = yrisk, family = "binomial")
+summary(marijuana_use_fit)
+
+# Forcing a normal multiple regression
+marijuana_use_lm <- lm(q45 ~ age + sex + year + q46new + q47, data = yrisk)
+summary(marijuana_use_lm)
+
+# Analyzing the correlations between the aforementioned variables
+yriskmj <- yrisk %>% select(q45, age, sex, year, q46new, q47)
+corr.mj <- cor(yriskmj, use = "pairwise.complete.obs")
+corr.mj
+corr.mj[lower.tri(corr.mj, diag = TRUE)] <- NA
+corrplot(corr.mj, method = "number", type = "upper", diag = FALSE)
+
+# q46new and q45 are HIGHLY correlated as well as q45 and q47, q47 and q46new!
+```
+### Residual plots from marijuana multiple regression
+```{R}
+# And, again, the residual plots look atrocious because of the categorical data
+layout(matrix(c(1,2,3,4),2,2))
+plot(marijuana_use_fit)
+```
+## Additional bar graphs to elicit the relationship of the recent variables (sex, age, grade, q46new, and q47) and whether or not sexual intercourse has occurred.
+```{R}
+library(dplyr)
+# These variables needed to be made into factors in order for bar graphs to make sense
+
+age_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5)) +
+    scale_y_continuous(breaks = seq(0, 7000, 1000), limits = c(0, 6500))
+age_marijuanabar
+
+agefirst_time_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(q46new))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age of First Time and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Age of First Time", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Never", "8 or younger", "9 or 10 ", "11 or 12", "13 or 14", "15 or 16", "17 or older")) +
+  scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5))
+agefirst_time_marijuanabar
+
+past30_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(q47))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Use in Last 30 Days and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Amount in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77'), labels = c("Never", "1 or 2 times", "3 to 9 times", "10 to 19 times", "20 to 39 times", "40 or more")) +
+  scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5))
+past30_marijuanabar
+```
+
+```{R}
+yrisk$q30[yrisk$q30==2] <- 0
+cig_use_logit <- glm(q30 ~ age + sex + year + q31 + q32 + q33 + q38, data = yrisk, family = "binomial")
+summary(cig_use_logit)
+```
+### Due to lack of convergence, I wanted to see which variables may be highly correlated. A linear-dependence must have occurred. 
+```{R}
+# Analyzing the correlations between the aforementioned variables
+yriskcig <- yrisk %>% select(age, sex, year, q31, q32, q33, q38)
+yriskcig
+
+corr.cig <- cor(yriskcig, use = "pairwise.complete.obs")
+corr.cig
+corr.cig[lower.tri(corr.cig, diag = TRUE)] <- NA
+corrplot(corr.cig, method = "number", type = "upper", diag = FALSE)
+#q32 and q33 are nearly perfectly correlated!
+```
+## Examining bar graphs associated with cigarette use to identify the characteristics of teen smokers.
+```{R}
+agefirst_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q31))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age of First Cigarette Use") +
+  labs(x = "Cigarette Use", y = "Number of Teens") +
+  scale_fill_manual("Age of First Time 
+                    Smoking Cigarette", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Never", "8 or Younger", "9 or 10", "11 or 12", "13 or 14", "15 or 16", "17 or older")) +
+  scale_x_continuous(breaks = seq(0, 1.5, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 1800, 100), limits = c(0, 1800))
+agefirst_cigbar
+
+past30_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q32))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Days of Cigarette Use In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Days Used in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+past30_cigbar
+
+past30number_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q33))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Cigarette Used In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Cigarettes in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Did not smoke in past 30 days", "Less than 1 per day", "1 per day", "2 to 5 per day", "6 to 10 per day", "11 to 20 per day", "more than 20 per day")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+past30number_cigbar
+
+past30cigar_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q38))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Cigars Used In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Days Used in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+past30cigar_cigbar
+```
+
+## Multiple regression for several vaping/demographic items to predict vaping use
+```{R}
+yrisk$q34[yrisk$q34==2] <- 0
+
+vape_use_logit <- glm(q34 ~ age + sex + year + q35 + q36, data = yrisk, family = "binomial")
+summary(vape_use_logit)
+```
+### Due to lack of convergence, I wanted to see which variables may be highly correlated. A linear-dependence must have occurred (likely between grade and age). 
+```{R}
+# Analyzing the aforementioned variables for correlations.
+yriskvape <- yrisk %>% select(age, sex, year, q35, q36)
+corr.vape <- cor(yriskvape, use = "pairwise.complete.obs")
+corr.vape
+corr.cig[lower.tri(corr.cig, diag = TRUE)] <- NA
+corrplot(corr.vape, method = "number", type = "upper", diag = FALSE)
+# q35 and q36 have a very strong correlation!
+```
+## Examining bar graphs associated with vape use to identify the characteristics of teen smokers.
+```{R}
+past30_vapebar <- ggplot(yrisk, aes(x = q34, fill = factor(q35))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Use of Vape in Past 30 Days") +
+  labs(x = "Vape Has Been Used", y = "Number of Teens") +
+  scale_fill_manual("Days of Use in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 6000, 1000), limits = c(0, 6000))
+past30_vapebar
+
+obtained_vapebar <- ggplot(yrisk, aes(x = q34, fill = factor(q36))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Vape Was Obtained") +
+  labs(x = "Vape Has Been Used", y = "Number of Teens") +
+  scale_fill_manual("How Vape Was Obtained", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3', '#e41a1c'), labels = c("Did not use or obtain", "Bought in store", "From internet", "Someone else purchased with my $", "Borrowed", "Given from someone else", "Took from store or someone", "Other source")) +
+    scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 8000, 1000), limits = c(0, 8000))
+obtained_vapebar
+```
