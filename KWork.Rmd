@@ -520,8 +520,6 @@ gq8
 The greatest variability over time is increase in portion of youth always wearing a seatbelt.
 ---
 
-
-
 #Why the NA in later years?
 ```{r}
 grouped_gyear %>%
