@@ -703,6 +703,7 @@ gq8
 .left-column[
 - There is some evidence of youth waiting longer to have more than a few sips of alcohol.
 ]
+.right-column[
 ```{R, include = FALSE}
 grouped_gyear$q40new[grouped_gyear$q40==1] <- 1
 grouped_gyear$q40new[grouped_gyear$q40==2] <- 7
@@ -719,7 +720,6 @@ gq40 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q40))) +
   scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
   scale_fill_manual("First Alcohol", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', "#660066", "#101010"), labels = c("Never", "17 or older", "15 or 16", "13 or 14", "11 or 12", "9 or 10", "8 or younger"))
 ```
-.right-column[
 ```{R, echo = FALSE}
 gq40
 ```
