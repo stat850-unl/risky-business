@@ -155,10 +155,11 @@ yrisk
 library(dplyr)
 gyear <- yrisk %>%
   mutate(year) %>%
-  select(year, age, sex, grade, stheight, stweight, bmi, bmipct, q8, q9, q12, q13, q15, q16, q17, q18, q26, q27, q28, q29, q30, q32, q33, q40, q41, q45, q46, q47, q50, q51, q55, q56, q57, q58, q59, q60, q61, q62, q63, q64, q67, q68, q69, q70, q83)
+  select(year, age, sex, grade, stheight, stweight, bmi, bmipct, q8, q9, q12, q13, q15, q16, q17, q18, q26, q27, q28, q29, q30, q32, q33, q36, q40, q41, q45, q46, q47, q50, q51, q55, q56, q57, q58, q59, q60, q61, q62, q63, q64, q67, q68, q69, q70, q83)
 ```
 
 ```{r}
+library(tidyverse)
 grouped_gyear <- gyear %>%
   group_by(year)
 grouped_gyear
@@ -572,16 +573,104 @@ myearq83 <- grouped_gyear %>%
 myearq83
 ```
 
-# Graph means across years for PCA identified questions.
+# Graph seat belt use over time
+---
 ```{r}
 library(ggplot2)
 library(dplyr) 
-gq8 <-ggplot(myearq8, aes(x = year, y = avg)) + 
-  geom_line(aes(color = "blue", linetype = "solid")) + 
-  geom_point(aes(color = "blue")) +
-  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019))
-gq8 <- gq8 + labs(title = "How often do you wear a seatbelt when riding in a car driven by someone else?", x = "Year", y = "Average 4.0 = Most of the Time 5.0 = Always") +
-  theme(legend.position = 'none')
+# grouped_gyear
+gq8 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q8))) + 
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+  labs(title = "How often do you wear a seatbelt when riding in a car driven by someone else?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Seatbelt Use", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02'), labels = c("Never", "Rarely", "Sometimes", "Most", "Always"))
 gq8
 ```
+The greatest variability in youth over time is increase in always wearing a seatbelt.
+A large increase in youth not answering this question has occurred in later surveys.
+---
 
+
+
+#Why the NA in later years?
+```{r}
+library(skimr)
+grouped_gyear %>%
+  dplyr::group_by(year) %>%
+  skim()
+```
+
+# Need to Recode Answers to q40 to create graph
+# Graph age of first drink over time
+---
+```{r}
+grouped_gyear$q40new[grouped_gyear$q40==1] <- 1
+grouped_gyear$q40new[grouped_gyear$q40==2] <- 7
+grouped_gyear$q40new[grouped_gyear$q40==3] <- 6
+grouped_gyear$q40new[grouped_gyear$q40==4] <- 5
+grouped_gyear$q40new[grouped_gyear$q40==5] <- 4
+grouped_gyear$q40new[grouped_gyear$q40==6] <- 3
+grouped_gyear$q40new[grouped_gyear$q40==7] <- 2
+grouped_gyear
+
+gq40 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q40))) + 
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+  labs(title = "At what age did you first have more than a few sips of alcohol?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("First Alcohol", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', "#660066", "#101010"), labels = c("Never", "17 or older", "15 or 16", "13 or 14", "11 or 12", "9 or 10", "8 or younger"))
+gq40
+```
+Overall, youth are older before having more than a few sips of alcohol.
+---
+
+# Q30 Looks interesting
+---
+```{r}
+gq30 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q30))) + 
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+  labs(title = "Have you ever tried a cigarette, even one or two puffs?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Tried Cigarettes", values = c('#a6cee3', '#1f78b4'), labels = c("Yes", "No"))
+gq30
+```
+Trying cigarettes has gone down over time. 
+Our hypothesis is that it is related to an increase in vaping.
+But there is not enough data on vaping to draw any conclusions.
+---
+
+#Q58
+---
+```{r}
+gq58 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q58))) + 
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+  labs(title = "Have you ever had sexual intercourse?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Had Sex", values = c('#a6cee3', '#1f78b4'), labels = c("Yes", "No"))
+gq58
+```
+Portion of youth engaging in sexual intercourse has really not changed.
+---
+
+#Q67
+```{r}
+gq67 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q67))) + 
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+  labs(title = "How do you describe your weight?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Weight Description", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02'), labels = c("Very Underweight", "Slightly Underweight", "About Right", "Slightly Overweight", "Very Overweight"))
+gq67
+```
+#Q68
+```{r}
+grouped_gyear$q68new[grouped_gyear$q68 == 1] <- 2
+grouped_gyear$q68new[grouped_gyear$q68 == 2] <- 4
+grouped_gyear$q68new[grouped_gyear$q68 == 3] <- 3
+grouped_gyear$q68new[grouped_gyear$q68 == 4] <- 1
+  
+gq68 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q68))) + 
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+  labs(title = "Which of the following are you trying to do about your weight?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("To Do with Weight", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3'), labels = c("Nothing", "Lose", "Maintain", "Gain"))
+gq68
+```
