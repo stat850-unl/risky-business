@@ -1,5 +1,12 @@
 # Read the Data into R
 ```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(skimr)
+```
+
+```{r}
 library(survey)
 library(skimr)
 data <- readr::read_csv("yrs24.csv", guess_max=400000)
@@ -152,14 +159,12 @@ yrisk
 
 #Summarize Data by Question and Year
 ```{r}
-library(dplyr)
 gyear <- yrisk %>%
   mutate(year) %>%
   select(year, age, sex, grade, stheight, stweight, bmi, bmipct, q8, q9, q12, q13, q15, q16, q17, q18, q26, q27, q28, q29, q30, q32, q33, q36, q40, q41, q45, q46, q47, q50, q51, q55, q56, q57, q58, q59, q60, q61, q62, q63, q64, q67, q68, q69, q70, q83)
 ```
 
 ```{r}
-library(tidyverse)
 grouped_gyear <- gyear %>%
   group_by(year)
 grouped_gyear
@@ -167,8 +172,6 @@ grouped_gyear
 
 # Means of questions identified by PCA by year. 
 ```{r}
-library(tidyverse)
-
 myearq8 <- grouped_gyear %>%
   select(year, q8) %>%
   group_by(year) %>%
@@ -178,8 +181,6 @@ myearq8
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq9 <- grouped_gyear %>%
   select(year, q9) %>%
   group_by(year) %>%
@@ -189,8 +190,6 @@ myearq9
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq12 <- grouped_gyear %>%
   select(year, q12) %>%
   group_by(year) %>%
@@ -200,8 +199,6 @@ myearq12
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq13 <- grouped_gyear %>%
   select(year, q13) %>%
   group_by(year) %>%
@@ -211,8 +208,6 @@ myearq13
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq15 <- grouped_gyear %>%
   select(year, q15) %>%
   group_by(year) %>%
@@ -222,8 +217,6 @@ myearq15
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq16 <- grouped_gyear %>%
   select(year, q16) %>%
   group_by(year) %>%
@@ -233,8 +226,6 @@ myearq16
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq17 <- grouped_gyear %>%
   select(year, q17) %>%
   group_by(year) %>%
@@ -244,8 +235,6 @@ myearq17
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq18 <- grouped_gyear %>%
   select(year, q18) %>%
   group_by(year) %>%
@@ -255,8 +244,6 @@ myearq18
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq26 <- grouped_gyear %>%
   select(year, q26) %>%
   group_by(year) %>%
@@ -266,8 +253,6 @@ myearq26
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq27 <- grouped_gyear %>%
   select(year, q27) %>%
   group_by(year) %>%
@@ -277,8 +262,6 @@ myearq27
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq28 <- grouped_gyear %>%
   select(year, q28) %>%
   group_by(year) %>%
@@ -288,8 +271,6 @@ myearq28
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq29 <- grouped_gyear %>%
   select(year, q29) %>%
   group_by(year) %>%
@@ -299,8 +280,6 @@ myearq29
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq30 <- grouped_gyear %>%
   select(year, q30) %>%
   group_by(year) %>%
@@ -310,8 +289,6 @@ myearq30
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq32 <- grouped_gyear %>%
   select(year, q32) %>%
   group_by(year) %>%
@@ -321,8 +298,6 @@ myearq32
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq33 <- grouped_gyear %>%
   select(year, q33) %>%
   group_by(year) %>%
@@ -332,8 +307,6 @@ myearq33
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq40 <- grouped_gyear %>%
   select(year, q40) %>%
   group_by(year) %>%
@@ -343,8 +316,6 @@ myearq40
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq41 <- grouped_gyear %>%
   select(year, q41) %>%
   group_by(year) %>%
@@ -354,8 +325,6 @@ myearq41
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq45 <- grouped_gyear %>%
   select(year, q45) %>%
   group_by(year) %>%
@@ -365,8 +334,6 @@ myearq45
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq46 <- grouped_gyear %>%
   select(year, q46) %>%
   group_by(year) %>%
@@ -376,8 +343,6 @@ myearq46
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq47 <- grouped_gyear %>%
   select(year, q47) %>%
   group_by(year) %>%
@@ -387,8 +352,6 @@ myearq47
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq50 <- grouped_gyear %>%
   select(year, q50) %>%
   group_by(year) %>%
@@ -398,8 +361,6 @@ myearq50
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq51 <- grouped_gyear %>%
   select(year, q51) %>%
   group_by(year) %>%
@@ -409,8 +370,6 @@ myearq51
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq55 <- grouped_gyear %>%
   select(year, q55) %>%
   group_by(year) %>%
@@ -420,8 +379,6 @@ myearq55
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq56 <- grouped_gyear %>%
   select(year, q56) %>%
   group_by(year) %>%
@@ -431,8 +388,6 @@ myearq56
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq57 <- grouped_gyear %>%
   select(year, q57) %>%
   group_by(year) %>%
@@ -442,8 +397,6 @@ myearq57
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq58 <- grouped_gyear %>%
   select(year, q58) %>%
   group_by(year) %>%
@@ -453,8 +406,6 @@ myearq58
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq59 <- grouped_gyear %>%
   select(year, q59) %>%
   group_by(year) %>%
@@ -464,8 +415,6 @@ myearq59
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq60 <- grouped_gyear %>%
   select(year, q60) %>%
   group_by(year) %>%
@@ -475,8 +424,6 @@ myearq60
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq61 <- grouped_gyear %>%
   select(year, q61) %>%
   group_by(year) %>%
@@ -486,8 +433,6 @@ myearq61
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq62 <- grouped_gyear %>%
   select(year, q62) %>%
   group_by(year) %>%
@@ -497,8 +442,6 @@ myearq62
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq63 <- grouped_gyear %>%
   select(year, q63) %>%
   group_by(year) %>%
@@ -508,8 +451,6 @@ myearq63
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq64 <- grouped_gyear %>%
   select(year, q64) %>%
   group_by(year) %>%
@@ -519,8 +460,6 @@ myearq64
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq67 <- grouped_gyear %>%
   select(year, q67) %>%
   group_by(year) %>%
@@ -530,8 +469,6 @@ myearq67
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq68 <- grouped_gyear %>%
   select(year, q68) %>%
   group_by(year) %>%
@@ -541,8 +478,6 @@ myearq68
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq69 <- grouped_gyear %>%
   select(year, q69) %>%
   group_by(year) %>%
@@ -552,8 +487,6 @@ myearq69
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq70 <- grouped_gyear %>%
   select(year, q70) %>%
   group_by(year) %>%
@@ -563,8 +496,6 @@ myearq70
 ```
 
 ```{r}
-library(tidyverse)
-
 myearq83 <- grouped_gyear %>%
   select(year, q83) %>%
   group_by(year) %>%
@@ -576,29 +507,48 @@ myearq83
 # Graph seat belt use over time
 ---
 ```{r}
-library(ggplot2)
-library(dplyr) 
 # grouped_gyear
-gq8 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q8))) + 
-  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+gq8 <- filter(grouped_gyear, !is.na(q8)) %>%
+  ggplot + 
+  geom_bar(mapping = aes(x = year, fill = factor(q8)), position = "fill", stat = "count", na.rm = FALSE) + 
   labs(title = "How often do you wear a seatbelt when riding in a car driven by someone else?", x = "Year") +
   scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
-  scale_fill_manual("Seatbelt Use", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02'), labels = c("Never", "Rarely", "Sometimes", "Most", "Always"))
+  scale_fill_manual("Seatbelt Use", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02'), labels = c("Never", "Rarely", "Sometimes", "Most", "Always")) + 
+theme_classic()
 gq8
 ```
-The greatest variability in youth over time is increase in always wearing a seatbelt.
-A large increase in youth not answering this question has occurred in later surveys.
+The greatest variability over time is increase in portion of youth always wearing a seatbelt.
 ---
 
 
 
 #Why the NA in later years?
 ```{r}
-library(skimr)
 grouped_gyear %>%
   dplyr::group_by(year) %>%
   skim()
 ```
+#Number of respondents by year
+```{r}
+num_peryear <- grouped_gyear %>%
+  summarize(n=n())
+num_peryear
+```
+
+#Graph of Respondents
+---
+```{r}
+gres <- ggplot(num_peryear, aes(x = year, y = n)) +
+  geom_line(color = "blue") +
+  geom_point(color = "blue") +
+  labs(title = "Number of Respondents per Year", x = "Year", y = "Number") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019))
+gres
+```
+ There was a large increase in number of respondents from 1999 to 2015. 
+ The number of respondents decreased sharply from 2015 to 2017. 
+ ---
+  
 
 # Need to Recode Answers to q40 to create graph
 # Graph age of first drink over time
@@ -613,11 +563,13 @@ grouped_gyear$q40new[grouped_gyear$q40==6] <- 3
 grouped_gyear$q40new[grouped_gyear$q40==7] <- 2
 grouped_gyear
 
-gq40 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q40))) + 
-  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+gq40 <-filter(grouped_gyear, !is.na(q40)) %>%
+  ggplot + 
+  geom_bar(mapping = aes(x = year, fill = factor(q40)), position = "fill", stat = "count", na.rm = TRUE) + 
   labs(title = "At what age did you first have more than a few sips of alcohol?", x = "Year") +
   scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
-  scale_fill_manual("First Alcohol", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', "#660066", "#101010"), labels = c("Never", "17 or older", "15 or 16", "13 or 14", "11 or 12", "9 or 10", "8 or younger"))
+  scale_fill_manual("First Alcohol", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', "#660066", "#101010"), labels = c("Never", "17 or older", "15 or 16", "13 or 14", "11 or 12", "9 or 10", "8 or younger")) +
+  theme_classic()
 gq40
 ```
 Overall, youth are older before having more than a few sips of alcohol.
@@ -626,11 +578,13 @@ Overall, youth are older before having more than a few sips of alcohol.
 # Q30 Looks interesting
 ---
 ```{r}
-gq30 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q30))) + 
-  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+gq30 <- filter(grouped_gyear, !is.na(q30)) %>%
+  ggplot + 
+  geom_bar(mapping = aes(x = year, fill = factor(q30)), position = "fill", stat = "count", na.rm = FALSE) + 
   labs(title = "Have you ever tried a cigarette, even one or two puffs?", x = "Year") +
   scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
-  scale_fill_manual("Tried Cigarettes", values = c('#a6cee3', '#1f78b4'), labels = c("Yes", "No"))
+  scale_fill_manual("Tried Cigarettes", values = c('#660066', '#1f78b4'), na.translate = FALSE, labels = c("Yes", "No")) + 
+  theme_classic()
 gq30
 ```
 Trying cigarettes has gone down over time. 
@@ -641,36 +595,14 @@ But there is not enough data on vaping to draw any conclusions.
 #Q58
 ---
 ```{r}
-gq58 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q58))) + 
-  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
+gq58 <- filter(grouped_gyear, !is.na(q58))  %>%
+  ggplot + 
+  geom_bar(mapping = aes(x = year, fill = factor(q58)), position = "fill", stat = "count", na.rm = TRUE) + 
   labs(title = "Have you ever had sexual intercourse?", x = "Year") +
   scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
-  scale_fill_manual("Had Sex", values = c('#a6cee3', '#1f78b4'), labels = c("Yes", "No"))
+  scale_fill_manual("Had Sex", values = c('#660066', '#1f78b4'), labels = c("Yes", "No")) + 
+  theme_classic()
 gq58
 ```
 Portion of youth engaging in sexual intercourse has really not changed.
 ---
-
-#Q67
-```{r}
-gq67 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q67))) + 
-  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
-  labs(title = "How do you describe your weight?", x = "Year") +
-  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
-  scale_fill_manual("Weight Description", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02'), labels = c("Very Underweight", "Slightly Underweight", "About Right", "Slightly Overweight", "Very Overweight"))
-gq67
-```
-#Q68
-```{r}
-grouped_gyear$q68new[grouped_gyear$q68 == 1] <- 2
-grouped_gyear$q68new[grouped_gyear$q68 == 2] <- 4
-grouped_gyear$q68new[grouped_gyear$q68 == 3] <- 3
-grouped_gyear$q68new[grouped_gyear$q68 == 4] <- 1
-  
-gq68 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q68))) + 
-  geom_bar( position = "fill", stat = "count", na.rm = TRUE) + 
-  labs(title = "Which of the following are you trying to do about your weight?", x = "Year") +
-  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
-  scale_fill_manual("To Do with Weight", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3'), labels = c("Nothing", "Lose", "Maintain", "Gain"))
-gq68
-```
