@@ -1,0 +1,777 @@
+---
+title: "Risky Business Slides"
+subtitle: "YRBS Analysis"
+author: "Karen Alexander, Jonah Garbin, Jay Jeffries"
+institute: "University of Nebraska-Lincoln"
+date: "11-19-20"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+background-image: url("YRBSS.jpg")
+background-position: center
+background-size: contain
+
+# Youth Risk Behavior Surveillance System
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+
+library(survey)
+library(mitools)
+library(psych)
+library(skimr)
+library(aod)
+library(Matrix)
+library(corrplot)
+library(dplyr)
+library(GPArotation)
+library(ggplot2)
+```
+
+---
+class: middle, inverse
+#YRBS
+<small>CDC Youth Risk Behavior Survey website:</small>
+<https://www.cdc.gov/healthyyouth/data/yrbs/data.htm>
+
+The dataset comes from the CDC who surveyed high school students, since 1991, to identify teen drug use, sex, eating habits, and more. The most recent year of results is 2019. This dataset stretches across every state and from high schools who have given the CDC permission for use.
+## The dataset is split as follows:
+- The complete national dataset (too large of a file for <i>R</i> or GitHub!)
+  - The data reduction was done via SAS
+- The dataset from states starting from A-M
+- The dataset from states starting from N-Z
+- District data
+---
+class: inverse, middle
+#YRBS
+### Seven kinds of variables are included in the combined datasets:
+
+1. Sample variables (identify records by survey, site type, and survey year)
+--
+
+2. Demographic variables (self-reported demographic characteristics such as age, sex, grade, race)
+--
+
+3. The race variable was changed in 2015
+--
+
+4. Body mass index (BMI) variables (body mass index %, obesity indicator, overweight indicator)
+--
+
+5. Sexual minority variables (sexual identity and the sex of sexual contact with others)
+--
+
+6. 2019 supplemental variables (dichotomous variables of broad interest)
+  - Upon realization that these were only given in the 2019 survey, these questions were <b>deleted</b>
+--
+
+7. Selected additional risk behavior optional question variables (dichotomized risk behavior variables; e.g. driving under influence)
+---
+### Cleaning the data required slimming to odd years as this survey was completed every <i>other</i> year!
+- Only the odd years between 1991 to 2019 are involved in this dataset
+    - This is important moving forward in the analysis
+
+###Analyses include:
+- A Principal Component Analysis
+- Multiple Regressions and Logistic Regressions
+- Yearly trends visualized
+- Barcharts of characteristics & demographics regarding the entire sample
+```{R, include = FALSE}
+data <- readr::read_csv("yrs24.csv", guess_max=400000)
+slim.data <- select(data, year, c(23,24,27,28,30,31,32,33,41,42,43,44,45,47,
+                                                        48,55,56,60,61,62,65,66,70,71,72,73,74,75,
+                                                        76,77,78,79,80,81,82,83,96))
+pca.data <- filter(slim.data, year %in% c(1991,1993, 1995, 1997, 1999, 2001, 2003,
+                                          2005, 2007, 2009, 2011, 2013, 2015, 2017,
+                                          2019))
+pca.data <- subset(pca.data, select = -c(year))
+```
+
+---
+class: inverse, middle
+# Principal Component Analysis (PCA)
+- Why a PCA? 
+- "Loading onto a component"
+- This PCA explained only a % of the overall survey
+```{R, include = FALSE}
+fit <- principal(pca.data, nfactors=17, rotate="oblimin")
+
+pca.data$q29new[pca.data$q29==1] <- 1
+pca.data$q29new[pca.data$q29==2] <- 3
+pca.data$q29new[pca.data$q29==3] <- 2
+pca.data$q46new[pca.data$q46==1] <- 1
+pca.data$q46new[pca.data$q46==2] <- 7
+pca.data$q46new[pca.data$q46==3] <- 6
+pca.data$q46new[pca.data$q46==4] <- 5
+pca.data$q46new[pca.data$q46==5] <- 4
+pca.data$q46new[pca.data$q46==6] <- 3
+pca.data$q46new[pca.data$q46==7] <- 2
+pca.data$q58new[pca.data$q58==1] <- 2
+pca.data$q58new[pca.data$q58==2] <- 1
+pca.data$q59new[pca.data$q59==1] <- 1
+pca.data$q59new[pca.data$q59==2] <- 8
+pca.data$q59new[pca.data$q59==3] <- 7
+pca.data$q59new[pca.data$q59==4] <- 6
+pca.data$q59new[pca.data$q59==5] <- 5
+pca.data$q59new[pca.data$q59==6] <- 4
+pca.data$q59new[pca.data$q59==7] <- 3
+pca.data$q59new[pca.data$q59==8] <- 2
+pca.data$q62new[pca.data$q62==1] <- 1
+pca.data$q62new[pca.data$q62==2] <- 3
+pca.data$q62new[pca.data$q62==3] <- 2
+pca.data$q64new[pca.data$q64==1] <- 1
+pca.data$q64new[pca.data$q64==6] <- 2
+pca.data$q64new[pca.data$q64==5] <- 3
+pca.data$q64new[pca.data$q64==3] <- 4
+pca.data$q64new[pca.data$q64==4] <- 5
+pca.data$q64new[pca.data$q64==7] <- 6
+pca.data$q64new[pca.data$q64==8] <- 7
+pca.data$q64new[pca.data$q64==2] <- 8
+```
+
+### The process of compiling components into the dataset:
+- The data was made up of the following components: Sexual_Activity_Behavior, Marijuana_Use_Behavior, Cigarette_Smoking_Behavior, Other_Drug_Use, Suicide_Attempt_Behavior, and Weapon_Carrying_Behavior
+- Each of these components is comprised of these items, or question
+  - e.g. pca.data$q59new of the component Sexual_Activity_Behavior = "Have you ever had sexual intercourse?"
+```{R}
+pca.data$Sexual_Activity_Behavior = pca.data$q58new + pca.data$q59new + pca.data$q60 + pca.data$q61 + pca.data$q62 + pca.data$q63 + pca.data$q64new
+pca.data$Marijuana_Use_Behavior = pca.data$q45 +  pca.data$q46new +  pca.data$q47
+pca.data$Cigarette_Smoking_Behavior = pca.data$q32 + pca.data$q33
+pca.data$Other_Drug_Use = pca.data$q50 + pca.data$q51 + pca.data$q55 + pca.data$q56
+pca.data$Suicide_Attempt_Behavior = pca.data$q28 + pca.data$q29new
+pca.data$Weapon_Carrying_Behavior = pca.data$q12 + pca.data$q13
+```
+```{R, include = FALSE}
+yrisk <- merge(data, pca.data, all.x=TRUE) 
+```
+---
+class: center, middle
+# Correlation matrix of PCA components
+```{R, include = FALSE}
+x <- select(yrisk, Sexual_Activity_Behavior, Marijuana_Use_Behavior, Cigarette_Smoking_Behavior,
+            Other_Drug_Use, Suicide_Attempt_Behavior, Weapon_Carrying_Behavior)
+corr.comp <- cor(x, use = "pairwise.complete.obs")
+corr.comp[lower.tri(corr.comp, diag = TRUE)] <- NA
+```
+```{R, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
+corrplot(corr.comp, method = "number", type = "upper", diag = FALSE)
+```
+
+---
+class: middle
+# PCA Respondents by Year
+.left-column[
+- There was a large increase in number of respondents from 1999 to 2015.
+- The number of respondents decreased sharply from 2015 to 2017.
+]
+.right-column[
+```{R, include = FALSE, echo = FALSE, warning = FALSE}
+gyear <- yrisk %>%
+  mutate(year) %>%
+  select(year, age, sex, grade, stheight, stweight, bmi, bmipct, q8, q9, q12, q13, q15, q16, q17, q18, q26, q27, q28, q29, q30, q32, q33, q36, q40, q41, q45, q46, q47, q50, q51, q55, q56, q57, q58, q59, q60, q61, q62, q63, q64, q67, q68, q69, q70, q83)
+
+grouped_gyear <- gyear %>%
+  group_by(year)
+grouped_gyear
+
+num_peryear <- grouped_gyear %>%
+  summarize(n=n())
+num_peryear
+
+gres <- ggplot(num_peryear, aes(x = year, y = n)) +
+  geom_line(color = "blue") +
+  geom_point(color = "blue") +
+  labs(title = "Number of Respondents per Year", x = "Year", y = "Number") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019))
+```
+```{R, echo = FALSE}
+gres
+```
+]
+---
+class: inverse
+# Multiple Regressions (MR)
+Used for prediction or explanation of a criterion or outcome (dependent variable)
+
+### Predictors: age, sex, year, and grade
+### Criterion: each component (in their own separate MR)
+- The demographic variables age, sex, year, and grade were input into each model to identify differences between groups and/or explanation of the overarching components.
+
+---
+# Sexual Activity Behavior MR
+```{R, include = FALSE}
+Sexual_Activity <- lm(Sexual_Activity_Behavior ~ age + sex + year + grade, data = yrisk)
+```
+```{R, echo = FALSE}
+summary(Sexual_Activity)
+```
+---
+# Marijuana Use Behavior MR
+```{R, include = FALSE}
+Marijuana_Use <- lm(Marijuana_Use_Behavior ~ age + sex + year + grade, data = yrisk)
+```
+```{R, echo = FALSE}
+summary(Marijuana_Use)
+```
+---
+# Cigarette Smoking Behavior MR
+```{R, include = FALSE}
+Cig_Use <- lm(Cigarette_Smoking_Behavior ~ age + sex + year + grade, data = yrisk)
+```
+```{R, echo = FALSE}
+summary(Cig_Use)
+```
+---
+# Other Drug Use MR
+```{R, include = FALSE}
+Drug_Use <- lm(Other_Drug_Use ~ age + sex + year + grade, data = yrisk)
+```
+```{R, echo = FALSE}
+summary(Drug_Use)
+```
+---
+# Suicide Attempt Behavior MR
+```{R, include = FALSE}
+Suicide <- lm(Suicide_Attempt_Behavior ~ age + sex + year + grade, data = yrisk)
+```
+```{R, echo = FALSE}
+summary(Suicide)
+```
+---
+# Weapon Carrying Behavior MR
+```{R, include = FALSE}
+Weapon_Use <- lm(Weapon_Carrying_Behavior ~ age + sex + year + grade, data = yrisk)
+```
+```{R, echo = FALSE}
+summary(Weapon_Use)
+```
+---
+# Logistic regression 1
+
+```{R, include = FALSE}
+yrisk$q58[yrisk$q58==2] <- 0
+sexual_activity_logit <- glm(q58 ~ age + sex + grade + year + q66, data = yrisk, family = "binomial")
+```
+```{R, echo = FALSE}
+summary(sexual_activity_logit)
+```
+---
+# Plotting binary correlations to better understand these variables
+### The <b>darker</b> the number, the <i>stronger</i> the relationship
+.left-column[
+None of the variables are highly correlated. 
+- This is good! You don't want highly correlated predictors (multicollinearity) or results will be unreliable and imprecise prediction.
+]
+.right-column[
+```{R, include = FALSE}
+yrisksex <- yrisk %>% select(q58, age, sex, year, q66)
+library(Matrix)
+library(corrplot)
+corr.sex <- cor(yrisksex, use = "pairwise.complete.obs")
+corr.sex
+corr.sex[lower.tri(corr.sex, diag = TRUE)] <- NA
+```
+```{R, echo = FALSE}
+corrplot(corr.sex, method = "number", type = "upper", diag = FALSE)
+```
+]
+
+
+---
+class: middle, inverse
+
+Typically, I would offer scatterplots with regression lines, but the scatterplots make no sense because of the non-continuous data. 
+
+Instead, I used bar graphs to elicit the relationships.
+
+The following several slides are in regards to the sexual activity behavior questions.
+---
+class: middle, center
+# Sexual Activity Barcharts
+Below is the number of sexually inactive teens in each age category.
+```{R, include = FALSE, warning = FALSE}
+age1_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Sexual Activity") +
+  labs(x = "Sexually Inactive", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(0, 0, 1), limits = c(-0.5, 0.5)) +
+    scale_y_continuous(breaks = seq(0, 260000, 10000), limits = c(0, 260000))
+```
+```{R, echo = FALSE, warning = FALSE}
+age1_sexbar
+```
+
+---
+class: middle, center
+# Sexual Activity Barcharts
+Below is the number of sexually active teens in each age category.
+```{R, include = FALSE, warning = FALSE}
+age2_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Sexual Activity") +
+  labs(x = "Sexually Active", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.25)) +
+    scale_y_continuous(breaks = seq(0, 33000, 1500), limits = c(0, 32000))
+age2_sexbar
+```
+```{R, echo = FALSE, warning = FALSE}
+age2_sexbar
+```
+
+---
+class: middle, center
+# Sexual Activity Barcharts
+Sexually active by sex
+```{R, include = FALSE, warning = FALSE}
+sex1_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(sex))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex", values = c("1" = "pink", "2" = "blue"), labels = c("female", "male")) +
+  ggtitle("Bar Graph of Sex and Sexual Activity") +
+  labs(x = "Sexually Active", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.25)) +
+  scale_y_continuous(breaks = seq(0, 55000, 10000), limits = c(0, 55000))
+```
+```{R, echo = FALSE, warning = FALSE}
+sex1_sexbar
+```
+
+---
+class: middle, center
+# Sexual Activity Barcharts
+Sexually inactive by sex
+```{R, include = FALSE, warning = FALSE}
+sex2_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(sex))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex", values = c("1" = "pink", "2" = "blue"), labels = c("female", "male")) +
+  ggtitle("Bar Graph of Sex and Sexual Activity") +
+  labs(x = "Sexually Inactive", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(0, 0, 1), limits = c(-0.5, 0.25)) +
+  scale_y_continuous(breaks = seq(0, 550000, 50000), limits = c(0, 550000))
+```
+```{R, echo = FALSE, warning = FALSE}
+sex2_sexbar
+```
+---
+class: middle, center
+# Sexual Activity Barcharts
+Sexually inactive by sex ID
+```{R, include = FALSE, warning = FALSE}
+sexid_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(q66))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex ID", values = c('#a6cee3', '#fc8d62', '#d95f02', '#ffffb3'), labels = c("Heterosexual", "Gay or Lesbian", "Bisexual", "I don't know")) +
+  ggtitle("Bar Graph of Sex ID and Sexual Activity") +
+  labs(x = "Sexually Inactive Teens", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 14000, 1000), limits = c(0, 14000))
+```
+```{R, echo = FALSE, warning = FALSE}
+sexid_sexbar
+```
+
+---
+class: middle, center
+# Sexual Activity Barcharts
+Sexually active by sex ID
+```{R, include = FALSE, warning = FALSE}
+sexid_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(q66))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex ID", values = c('#a6cee3', '#fc8d62', '#d95f02', '#ffffb3'), labels = c("Heterosexual", "Gay or Lesbian", "Bisexual", "I don't know")) +
+  ggtitle("Bar Graph of Sex ID and Sexual Activity") +
+  labs(x = "Sexually Active Teens", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(0, 0, 1), limits = c(-0.5, 0.5)) +
+  scale_y_continuous(breaks = seq(0, 160000, 10000), limits = c(0, 160000))
+```
+```{R, echo = FALSE, warning = FALSE}
+sexid_sexbar
+```
+
+---
+# Logistic regression 2
+```{R, echo = FALSE, warning = FALSE, include = FALSE}
+yrisk <- merge(data, pca.data, all.x=TRUE)
+yrisk$q45
+yrisk$q45[yrisk$q45 == 1] <- 0 # 0 = Absence of any marijuana use
+# 1 = If ANY marijuana use occurred
+yrisk$q45[yrisk$q45 == 2] <- 1
+yrisk$q45[yrisk$q45 == 3] <- 1
+yrisk$q45[yrisk$q45 == 4] <- 1
+yrisk$q45[yrisk$q45 == 5] <- 1
+yrisk$q45[yrisk$q45 == 6] <- 1
+yrisk$q45[yrisk$q45 == 7] <- 1
+
+marijuana_use_fit <- glm(q45 ~ age + sex + grade + year + q46 + q47, data = yrisk, family = "binomial")
+```
+```{R, echo = FALSE}
+summary(marijuana_use_fit)
+```
+
+---
+# Plotting binary correlations to better understand these variables
+### The <b>darker</b> the number, the <i>stronger</i> the relationship
+.left-column[
+Some of the variables are highly correlated. 
+- Multicollinearity exists, and results may be unreliable and imprecise for prediction.
+]
+
+```{R, include = FALSE}
+yriskmj <- yrisk %>% select(q45, age, sex, year, q46, q47)
+corr.mj <- cor(yriskmj, use = "pairwise.complete.obs")
+corr.mj
+corr.mj[lower.tri(corr.mj, diag = TRUE)] <- NA
+```
+.right-column[
+```{R, echo = FALSE}
+corrplot(corr.mj, method = "number", type = "upper", diag = FALSE)
+```
+]
+
+---
+class: middle, inverse
+Additional bar graphs to elicit the relationship of the recent variables (sex, age, grade, q46, and q47) and whether or not marijuana usage has occurred..
+
+---
+class: middle, center
+# Marijuana Use Barcharts
+Below is the number of teens who first smoked marijuana in each age category.
+```{R, include = FALSE, warning = FALSE}
+yrisk <- merge(data, pca.data, all.x=TRUE)
+age_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5)) +
+    scale_y_continuous(breaks = seq(0, 7000, 1000), limits = c(0, 6500))
+```
+```{R, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
+age_marijuanabar
+```
+---
+class: middle, center
+# Marijuana Use Barcharts
+Below elicits the age in which teens smoked marijuana for the first time in each age category.
+```{R, include = FALSE, warning = FALSE}
+agefirst_time_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(q46))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age of First Time and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Age of First Time", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Never", "8 or younger", "9 or 10 ", "11 or 12", "13 or 14", "15 or 16", "17 or older")) +
+  scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5))
+```
+```{R, echo = FALSE, error = FALSE, warning = FALSE, message = FALSE}
+agefirst_time_marijuanabar
+```
+---
+class: middle, center
+# Marijuana Use Barcharts
+Below is the number of sexually inactive teens in each age category.
+```{R, include = FALSE, warning = FALSE}
+past30_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(q47))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Use in Last 30 Days and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Amount in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77'), labels = c("Never", "1 or 2 times", "3 to 9 times", "10 to 19 times", "20 to 39 times", "40 or more")) +
+  scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5))
+```
+```{R, echo = FALSE, error = FALSE, warning = FALSE, message = FALSE}
+past30_marijuanabar
+```
+---
+# Logistic regression 3
+
+```{R, echo = FALSE, warning = FALSE, include = FALSE}
+yrisk$q30[yrisk$q30==2] <- 0
+cig_use_logit <- glm(q30 ~ age + sex + year + q31 + q32 + q33 + q38, data = yrisk, family = "binomial")
+```
+```{R, echo = FALSE, message = FALSE, error = FALSE, warning = FALSE}
+summary(cig_use_logit)
+```
+---
+# Plotting binary correlations to better understand these cigarette variables
+### The <b>darker</b> the number, the <i>stronger</i> the relationship
+.left-column[
+Some of the variables are VERY highly correlated. 
+- Multicollinearity exists. Q32 and Q33 are nearly perfectly correlated.
+]
+
+```{R, include = FALSE}
+yriskcig <- yrisk %>% select(age, sex, year, q31, q32, q33, q38)
+yriskcig
+
+corr.cig <- cor(yriskcig, use = "pairwise.complete.obs")
+corr.cig
+corr.cig[lower.tri(corr.cig, diag = TRUE)] <- NA
+```
+.right-column[
+```{R, echo = FALSE}
+corrplot(corr.cig, method = "number", type = "upper", diag = FALSE)
+```
+]
+
+---
+class: middle, inverse
+Additional bar graphs to elicit the relationship of the recent variables (sex, age, grade, q31, q32, q33, and q38) and whether or not cigarette smoking has occurred..
+
+---
+class: middle, center
+# Cigarette Use Barcharts
+Below is the number of teens who first smoked a cigarette in each age category.
+```{R, include = FALSE, warning = FALSE}
+agefirst_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q31))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age of First Cigarette Use") +
+  labs(x = "Cigarette Use", y = "Number of Teens") +
+  scale_fill_manual("Age of First Time 
+                    Smoking Cigarette", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Never", "8 or Younger", "9 or 10", "11 or 12", "13 or 14", "15 or 16", "17 or older")) +
+  scale_x_continuous(breaks = seq(0, 1.5, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 1800, 100), limits = c(0, 1800))
+```
+```{R, echo = FALSE, warning = FALSE, message = FALSE}
+agefirst_cigbar
+```
+---
+class: middle, center
+# Cigarette Use Barcharts
+Below is the number of days the surveyed teens smoked a cigarette in the past 30 days.
+```{R, include = FALSE}
+past30_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q32))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Days of Cigarette Use In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Days Used in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+```
+```{R, echo = FALSE, warning = FALSE, message = FALSE}
+past30_cigbar
+```
+---
+class: middle, center
+# Cigarette Use Barcharts
+Below is the number of cigarettes used by teens that have smoked.
+```{R, include = FALSE, warning = FALSE}
+past30number_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q33))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Cigarette Used In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Cigarettes in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Did not smoke in past 30 days", "Less than 1 per day", "1 per day", "2 to 5 per day", "6 to 10 per day", "11 to 20 per day", "more than 20 per day")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+```
+```{R, echo = FALSE, warning = FALSE, message = FALSE}
+past30number_cigbar
+```
+---
+class: middle, center
+# Cigarette Use Barcharts
+Below is the number of cigars, cigarillos, or little cigars used by teens that have smoked.
+```{R, include = FALSE}
+past30cigar_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q38))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Cigars Used In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Days Used in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+```
+```{R, echo = FALSE, message = FALSE, warning = FALSE}
+past30cigar_cigbar
+```
+
+---
+# Logistic regression 4
+
+```{R, include = FALSE}
+yrisk$q34[yrisk$q34==2] <- 0
+
+vape_use_logit <- glm(q34 ~ age + sex + year + q35 + q36, data = yrisk, family = "binomial")
+```
+```{R, echo = FALSE, warning = FALSE}
+summary(vape_use_logit)
+```
+
+---
+# Plotting binary correlations to better understand these vaping variables
+### The <b>darker</b> the number, the <i>stronger</i> the relationship
+.left-column[
+Some of the variables are VERY highly correlated. 
+- Multicollinearity exists. Q35 and Q36 are nearly perfectly correlated.
+]
+```{R, include = FALSE}
+yriskvape <- yrisk %>% select(age, sex, year, q35, q36)
+corr.vape <- cor(yriskvape, use = "pairwise.complete.obs")
+corr.vape
+corr.cig[lower.tri(corr.cig, diag = TRUE)] <- NA
+```
+.right-column[
+```{R, echo = FALSE}
+corrplot(corr.vape, method = "number", type = "upper", diag = FALSE)
+```
+]
+
+---
+class: middle, inverse
+
+The last of the bar graphs exist to show the relationship of the recent variables (sex, age, grade, q35, and q36) and whether or not cigarette smoking has occurred..
+
+Because vaping is such a new phenomenon, there were few variables related to this that were useful. Future YRBS survey should involve more rigorous questioning of this phenomenon.
+
+---
+class: middle, center
+# Vape Use Barcharts
+Below is the number of days in the past 30 days that a vape has been used by the teens.
+```{R, include = FALSE}
+past30_vapebar <- ggplot(yrisk, aes(x = q34, fill = factor(q35))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Use of Vape in Past 30 Days") +
+  labs(x = "Vape Has Been Used", y = "Number of Teens") +
+  scale_fill_manual("Days of Use in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 6000, 1000), limits = c(0, 6000))
+```
+```{R, warning = FALSE, echo = FALSE, message = FALSE}
+past30_vapebar
+```
+
+---
+class: middle, center
+# Vape Use Barcharts
+Below is the explanation of how the vape was obtained by teens that reported they vaped.
+```{R, include = FALSE}
+obtained_vapebar <- ggplot(yrisk, aes(x = q34, fill = factor(q36))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Vape Was Obtained") +
+  labs(x = "Vape Has Been Used", y = "Number of Teens") +
+  scale_fill_manual("How Vape Was Obtained", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3', '#e41a1c'), labels = c("Did not use or obtain", "Bought in store", "From internet", "Someone else purchased with my $", "Borrowed", "Given from someone else", "Took from store or someone", "Other source")) +
+    scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 8000, 1000), limits = c(0, 8000))
+```
+```{R, echo = FALSE, warning = FALSE, message = FALSE}
+obtained_vapebar
+```
+
+---
+class: middle, inverse
+
+The ending of this presentation will involve trends among variables.
+- Remember, this survey was completed every odd year from 1991 to 2019
+- Some variables/questions changed as the format and items of the survey were revised
+
+---
+# Time-series seat belt use over time
+.left-column[
+- Greatest variability in youth over time is the increase in always wearing a seatbelt.
+- There are more youth not answering this question in later surveys.
+]
+.right-column[
+```{R, include = FALSE}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+gyear <- yrisk %>%
+  mutate(year) %>%
+  select(year, age, sex, grade, stheight, stweight, bmi, bmipct, q8, q9, q12, q13, q15, q16, q17, q18, q26, q27, q28, q29, q30, q32, q33, q36, q40, q41, q45, q46, q47, q50, q51, q55, q56, q57, q58, q59, q60, q61, q62, q63, q64, q67, q68, q69, q70, q83)
+library(tidyverse)
+grouped_gyear <- gyear %>%
+  group_by(year)
+grouped_gyear
+
+gq8 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q8))) +
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) +
+  labs(title = "How often do you wear a seatbelt when riding in a car driven by someone else?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Seatbelt Use", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02'), labels = c("Never", "Rarely", "Sometimes", "Most", "Always"))
+```
+
+```{R, echo = FALSE}
+gq8
+```
+]
+
+---
+# Time-series for age of first drink over time
+.left-column[
+- There is some evidence of youth waiting longer to have more than a few sips of alcohol.
+]
+```{R, include = FALSE}
+grouped_gyear$q40new[grouped_gyear$q40==1] <- 1
+grouped_gyear$q40new[grouped_gyear$q40==2] <- 7
+grouped_gyear$q40new[grouped_gyear$q40==3] <- 6
+grouped_gyear$q40new[grouped_gyear$q40==4] <- 5
+grouped_gyear$q40new[grouped_gyear$q40==5] <- 4
+grouped_gyear$q40new[grouped_gyear$q40==6] <- 3
+grouped_gyear$q40new[grouped_gyear$q40==7] <- 2
+grouped_gyear
+
+gq40 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q40))) +
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) +
+  labs(title = "At what age did you first have more than a few sips of alcohol?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("First Alcohol", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', "#660066", "#101010"), labels = c("Never", "17 or older", "15 or 16", "13 or 14", "11 or 12", "9 or 10", "8 or younger"))
+```
+.right-column[
+```{R, echo = FALSE}
+gq40
+```
+]
+
+---
+# Time series for trying cigarettes
+.left-column[
+- Trying cigarettes has gone down over time.
+- Hypothesis: an increase in vaping, but there is not enough data on vaping to draw any conclusions.
+]
+.right-column[
+```{R, include = FALSE}
+gq30 <- filter(grouped_gyear, !is.na(q30)) %>%
+  ggplot +
+  geom_bar(mapping = aes(x = year, fill = factor(q30)), position = "fill", stat = "count", na.rm = FALSE) +
+  labs(title = "Have you ever tried a cigarette, even one or two puffs?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Tried Cigarettes", values = c('#660066', '#1f78b4'), na.translate = FALSE, labels = c("Yes", "No")) +
+  theme_classic()
+```
+```{R, echo = FALSE}
+gq30
+```
+]
+
+---
+# Time series of teen sexual intercourse
+.left-column[
+- Portion of youth engaging in sexual intercourse has gone down some, but not much.
+]
+.right-column[
+```{R, include = FALSE}
+gq58 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q58))) +
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) +
+  labs(title = "Have you ever had sexual intercourse?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Had Sex", values = c('#a6cee3', '#1f78b4'), labels = c("Yes", "No"))
+```
+```{R, echo = FALSE}
+gq58
+```
+]
+
+---
+class: middle, inverse
+# Final Thoughts
+### "Kids these days..."
+
+Although these surveys may be susceptible to social desirability and faking, the youth are engaging in less "risky business" than you might think.
+- Media portrayal may not accurately elicit the relationships that exist among teens and risky behaviors
+- The vast majority are choosing their health and well-being over engaging in these behaviors
+- Research and education (what we can all do!) is helping teens become more informed about the effects of the behaviors as well as where to get help
+
+---
