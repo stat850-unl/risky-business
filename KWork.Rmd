@@ -573,7 +573,7 @@ gq40
 Overall, youth are older before having more than a few sips of alcohol.
 ---
 
-# Q30 Looks interesting
+# Q30 Cigarettes
 ---
 ```{r}
 gq30 <- filter(grouped_gyear, !is.na(q30)) %>%
@@ -585,12 +585,12 @@ gq30 <- filter(grouped_gyear, !is.na(q30)) %>%
   theme_classic()
 gq30
 ```
-Trying cigarettes has gone down over time. 
+Trying cigarettes has increased time. 
 Our hypothesis is that it is related to an increase in vaping.
 But there is not enough data on vaping to draw any conclusions.
 ---
 
-#Q58
+#Q58 Sexual Intercourse
 ---
 ```{r}
 gq58 <- filter(grouped_gyear, !is.na(q58))  %>%
