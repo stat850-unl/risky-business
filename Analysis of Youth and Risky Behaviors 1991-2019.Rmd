@@ -1,0 +1,354 @@
+---
+title: "Analysis of Youth and Risky Behaviors 1991 - 2019"
+author: "Karen M. Alexander, Jonah Garbin, and Jay Jeffries"
+date: "11/23/2020"
+output: html_document
+---
+## Introduction
+
+Since 1991 the Centers for Disease Control and Prevention (CDC) has surveyed high school students, to identify teen drug use, sex, eating habits, and more. The most recent results of the Youth Risk Behavior Surveillance System (YRBSS) are from 2019. This dataset stretches across every state who have given the CDC permission for use. Data is collected from youth in grades 9 – 12 attending public, private, and charter schools. The purposes of the YRBSS as outlined in the 2019 National YRBS Data User’s Guide (2020) are to: measure prevalence of health risk behaviors, monitor trends in health risk behaviors over time, look for any co-occurrences of health risk behaviors, provide data in a meaningful way at the national, state, territorial, tribal and local level, compare youth from different subpopulations, and monitor progress towards the CDC Healthy People initiative. The goals of our analysis were to reduce the original dataset to a smaller dataset based upon the survey questions that contain the most information through conducting a principal component analysis, to see if there were any important or interesting relationships among survey questions and demographic factors, and to look at any trends over time.
+
+## Data Cleaning 
+
+The initial dataset, the combined Youth Risk Behavior Survey (YRBS), was downloaded from the following website: [link] (https://www.cdc.gov/healthyyouth/data/yrbs/data.htm) as was the 2019 National YRBS Data User’s Guide (2020), The Software Analysis for YRBS (2020), and the 2019 YRBS National, State, and District Combined Datasets User’s Guide (2020). The YRBS was downloaded as a .txt file and converted to a .csv file. All files related to this project can be found in our GitHub repository [link] (https://github.com/stat850-unl/risky-business). Due to file size, the original dataset needed to be cleaned using SAS (Version 14.2) and a script for reducing the data to variables of interest is provided in cleaning_code.sas. The resulting data file, yrs24.csv, contains national survey results from odd numbered years, 1991 – 2019. Once the dataset was placed into GitHub the remaining analyses were all completed in R (Version 4.0.2).
+The first thing we did was skim the data using the package skimr. Upon completion of the skim we discovered 22 variables with no data. Those variables were removed and the new data set was named yrisk. The yrisk dataset contains seven kinds of variables: sample variables (identify records by survey, site type, and survey year), demographic variables (self-reported demographic characteristics such as age, sex, grade, race), body mass index (BMI) variables (body mass index %, obesity indicator, overweight indicator), sexual minority variables (sexual identity and the sex of sexual contact with others), 2019 supplemental variables (dichotomous variables of broad interest), and selected additional risk behavior optional question variables (dichotomized risk behavior variables; e.g. driving under influence). The yrisk dataset itself represents 217,340 youth aged 12 years old or younger  - 18 years old or older, in grades 9 - 12. Students from public, private, and charter schools are surveyed and the dataset we used contained 146 variables. 
+Survey sampling was conducted using stratified sampling methods in order to compare subpopulations by race. However, the race variable was changed in 2007 from four options to seven options. While code is provided to “bridge” this change, we felt both coding options for race lacked validity in terms of interpretation and therefore we did not use the sampling weights to account for stratified sampling in our analysis. The inability to compare youth by race is a limitation of our analysis.
+
+## Principle Component Analysis
+
+Due to an extensive list of individuals and variables available for analysis, a principle component analysis (PCA) was conducted to reduce the number of variables considered.  Data was formatted and adjusted so that the PCA could take place.  Results showed that 50.3% of the data’s total variance was explained through the use of 6 components.  The components were listed as follows
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(survey)
+library(mitools)
+library(psych)
+library(skimr)
+library(aod)
+library(Matrix)
+library(corrplot)
+library(dplyr)
+library(GPArotation)
+library(ggplot2)
+
+data <- readr::read_csv("yrs24.csv", guess_max=400000)
+slim.data <- select(data, year, c(23,24,27,28,30,31,32,33,41,42,43,44,45,47,
+                                                        48,55,56,60,61,62,65,66,70,71,72,73,74,75,
+                                                        76,77,78,79,80,81,82,83,96))
+pca.data <- filter(slim.data, year %in% c(1991,1993, 1995, 1997, 1999, 2001, 2003,
+                                          2005, 2007, 2009, 2011, 2013, 2015, 2017,
+                                          2019))
+pca.data <- subset(pca.data, select = -c(year))
+
+fit <- principal(pca.data, nfactors=17, rotate="oblimin")
+
+pca.data$q29new[pca.data$q29==1] <- 1
+pca.data$q29new[pca.data$q29==2] <- 3
+pca.data$q29new[pca.data$q29==3] <- 2
+pca.data$q46new[pca.data$q46==1] <- 1
+pca.data$q46new[pca.data$q46==2] <- 7
+pca.data$q46new[pca.data$q46==3] <- 6
+pca.data$q46new[pca.data$q46==4] <- 5
+pca.data$q46new[pca.data$q46==5] <- 4
+pca.data$q46new[pca.data$q46==6] <- 3
+pca.data$q46new[pca.data$q46==7] <- 2
+pca.data$q58new[pca.data$q58==1] <- 2
+pca.data$q58new[pca.data$q58==2] <- 1
+pca.data$q59new[pca.data$q59==1] <- 1
+pca.data$q59new[pca.data$q59==2] <- 8
+pca.data$q59new[pca.data$q59==3] <- 7
+pca.data$q59new[pca.data$q59==4] <- 6
+pca.data$q59new[pca.data$q59==5] <- 5
+pca.data$q59new[pca.data$q59==6] <- 4
+pca.data$q59new[pca.data$q59==7] <- 3
+pca.data$q59new[pca.data$q59==8] <- 2
+pca.data$q62new[pca.data$q62==1] <- 1
+pca.data$q62new[pca.data$q62==2] <- 3
+pca.data$q62new[pca.data$q62==3] <- 2
+pca.data$q64new[pca.data$q64==1] <- 1
+pca.data$q64new[pca.data$q64==6] <- 2
+pca.data$q64new[pca.data$q64==5] <- 3
+pca.data$q64new[pca.data$q64==3] <- 4
+pca.data$q64new[pca.data$q64==4] <- 5
+pca.data$q64new[pca.data$q64==7] <- 6
+pca.data$q64new[pca.data$q64==8] <- 7
+pca.data$q64new[pca.data$q64==2] <- 8
+
+pca.data$Sexual_Activity_Behavior = pca.data$q58new + pca.data$q59new + pca.data$q60 + pca.data$q61 + pca.data$q62 + pca.data$q63 + pca.data$q64new
+pca.data$Marijuana_Use_Behavior = pca.data$q45 +  pca.data$q46new +  pca.data$q47
+pca.data$Cigarette_Smoking_Behavior = pca.data$q32 + pca.data$q33
+pca.data$Other_Drug_Use = pca.data$q50 + pca.data$q51 + pca.data$q55 + pca.data$q56
+pca.data$Suicide_Attempt_Behavior = pca.data$q28 + pca.data$q29new
+pca.data$Weapon_Carrying_Behavior = pca.data$q12 + pca.data$q13
+
+yrisk_big <- merge(data,pca.data, all.x=TRUE)
+yrisk <- filter(yrisk_big, year %in% c(1991,1993, 1995, 1997, 1999, 2001, 2003,
+                                          2005, 2007, 2009, 2011, 2013, 2015, 2017,2019))
+```
+```{R}
+pca.data$Sexual_Activity_Behavior = pca.data$q58new + pca.data$q59new + pca.data$q60 + pca.data$q61 + pca.data$q62 + pca.data$q63 + pca.data$q64new
+pca.data$Marijuana_Use_Behavior = pca.data$q45 +  pca.data$q46new +  pca.data$q47
+pca.data$Cigarette_Smoking_Behavior = pca.data$q32 + pca.data$q33
+pca.data$Other_Drug_Use = pca.data$q50 + pca.data$q51 + pca.data$q55 + pca.data$q56
+pca.data$Suicide_Attempt_Behavior = pca.data$q28 + pca.data$q29new
+pca.data$Weapon_Carrying_Behavior = pca.data$q12 + pca.data$q13
+```
+When examining, items, items were recoded so that low scores (coded 1) implied lower risk behavior, and higher scores implied higher risk behavior.  This form of PCA was a truncated PCA with an oblique rotation.  The reason for this, was because I wanted to focus on items that loaded highest with the component, rather than consider all items for each component.  The reason for the oblique rotation was because from an applied perspective, there is likely to be a relationship between these components.  Therefore, to use an oblique rotation, in our opinion, is not necessarily practical in this current situation.  Below is a correlation matrix of the components, indicating solid relationships between the components.
+```{R, echo=FALSE}
+x <- select(yrisk, Sexual_Activity_Behavior, Marijuana_Use_Behavior, Cigarette_Smoking_Behavior,
+            Other_Drug_Use, Suicide_Attempt_Behavior, Weapon_Carrying_Behavior)
+corr.comp <- cor(x, use = "pairwise.complete.obs")
+corr.comp[lower.tri(corr.comp, diag = TRUE)] <- NA
+corrplot(corr.comp, method = "number", type = "upper", diag = FALSE)
+```
+
+## Regressions and Barcharts of Characteristics & Demographics
+
+Using the prior dataset composed during the principal component analysis (labeled “yrisk”), there was a series of regressions ran to predict the outcomes of certain variables given multiple predictors. This process began with multiple linear regressions using ordinary least squares for each aforementioned component, and then moved into logistic regression when given binary-scored information. The main priority of these analyses was to spot out which independent variables (predictors) are significant in the prediction model for the given scenario. Across all models were these predictors: age, sex, and grade. Depending on the outcome or criterion (dependent variable) and the respective survey questions that comprise it, additional predictors were added to the model. 
+	As mentioned before, the components sexual activity, marijuana use, cigarette smoking, other drug use, suicide, and weapon use behaviors were placed into their own linear regression model. For each of these models, the variables age, sex, year, and grade were implemented as predictors. Summaries of each model were provided via the R code summary(insert component name), which gave us an indication of which predictors were significant as well as the percentage of explanation that the overall model could give in regards to the outcome (the R2 and adjusted R2). In all components, the predictors age, sex, and year were significant (at p < 0.001) in predicting the outcome. Grade was significant for all components except other drug use, showing that there does not exist a strong enough relationship between grade in which the surveyed student was in and whether or not they took part in other drug use (heroin, cocaine, and paint-sniffing) behaviors to be used for accurate prediction. After analyzing the relationships among predictors for multicollinearity detection, grade was removed from the model due to the fact that grade and age were essentially eliciting the same responses. Multicollinearity exists when two explanatory variables (predictors) are highly correlated (where Pearson coefficient r = -1 or 1, or approaching). After isolating grade and age of student as two predictors that share a large amount of the same variability, grade was dropped from each model so as to reflect the most accurate and reliable results and predictive algorithm.
+	It is important to note here that the sheer volume of data may have given these predictors such significance in these multiple regression models. Age, sex, and year explained 3.87% of data in the self-reported sexual activity behavior of teens (R2 = 0.03873). The same predictors in the marijuana use behavior model explained 2% of data (R2 = 0.02021) from this survey. For the cigarette smoking behavior component, these three predictors explained just over 2% of the variability (R2 = 0.02091). The same predictors explained only 0.43% of variability in the other drug use component (R2 = 0.004389), and even less in the suicide attempt behavior component (0.11%, where R2 = 0.001146). It is apparent that these variables were found to be significant, but were not capable of explaining a large amount of the variance for each component, which circles back to the preceding statement that the number of data points may be leading to the idea their significance may be coming from the amount of data itself rather than their explanatory power. Evidently, the demographic-style variables chosen for these multiple regression models were not able to sufficiently explain over 4% of the variability in any of the theorized components. 
+	Moving away from the components found in the PCA, the next series of regression analyses involve logistic regression (via use of generalized linear models; the glm() R command). Logistic regressions are to be used when nominal or categorically-organized variables are involved in the model, if responses are recorded in a binary fashion (e.g. “Yes/No”, 0 and 1), or if you wish to predict the probability of something. In this instance, the items used in the Youth Risk Behavior Survey involve categorical data and utilize binary response scales, so predicting the probability of these behaviors makes sense. In all cases, the type of logistic regression used was of the binomial family. Out of pure interest of the author, sexual activity, marijuana use, cigarette use, and vape (e-cigarette) use were placed into logistic regressions to find the likelihood of teens partaking in these behaviors. 
+	For the teen sexual activity logistic regression model, question 58 of the survey was used as the criterion. Question 58 simply asks teens to identify whether or not they have had sexual intercourse, where the only available responses are “Yes” or “No”. To predict the probability of a teen selecting “Yes”, the predictors age, sex, year, and question 66 were used. Question 66 of the YRBS survey asks respondents to identify their sexual orientation, where their choices include: heterosexual, gay or lesbian, bisexual, or not sure. Inclusion of this last variable was important, as sexual identity was hypothesized to cause differentiation among the likelihood of sexual activity in teens. Here, all four predictors were significant at p < 0.001. Residual plots were created, but due to the categorical (and binary) nature of the data, these were not useful. In order to spot multicollinearity among variables, a correlation matrix was plotted using the pairwise method for deletion of observations. None of the variables were highly correlated, which ensures that the model was fairly solid in prediction.
+	Additional bar charts were used to capture these relationships visually. Typically, regression analyses involve scatterplots and a line of best fit (regression line), but given the nature of the data, scatterplots were not plausible visual displays. Below you will find the charts split on the basis of sexual activity or inactivity. The graphs were colored-categorized depending on the age of respondent, sex of the teen, as well as their sexual identity. You will notice that the most sexually inactive teen respondents were 13 years of age, while the most active were 17. Males and females were generally the same in terms of being sexually active, but females responded as being more inactive than males. As one would guess, heterosexuality was the largest proportion of teens sexual identities in both the sexual active and inactive categories. 
+```{R, echo=FALSE, warning=FALSE}
+age1_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Sexual Activity") +
+  labs(x = "Sexually Inactive", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(0, 0, 1), limits = c(-0.5, 0.5)) +
+    scale_y_continuous(breaks = seq(0, 260000, 10000), limits = c(0, 260000))
+age1_sexbar
+
+age2_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Sexual Activity") +
+  labs(x = "Sexually Active", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.5)) +
+    scale_y_continuous(breaks = seq(0, 32000, 1500), limits = c(0, 32000))
+age2_sexbar
+
+sex1_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(sex))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex", values = c("1" = "pink", "2" = "blue"), labels = c("female", "male")) +
+  ggtitle("Bar Graph of Sex and Sexual Activity") +
+  labs(x = "Sexually Active", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.25)) +
+  scale_y_continuous(breaks = seq(0, 55000, 10000), limits = c(0, 55000))
+sex1_sexbar
+
+sex2_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(sex))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex", values = c("1" = "pink", "2" = "blue"), labels = c("female", "male")) +
+  ggtitle("Bar Graph of Sex and Sexual Activity") +
+  labs(x = "Sexually Inactive", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(2, 2, 1), limits = c(1.5, 2.25)) +
+  scale_y_continuous(breaks = seq(0, 550000, 50000), limits = c(0, 550000))
+sex2_sexbar
+
+sexid_sexbar <- ggplot(yrisk, aes(x = q58, fill = factor(q66))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex ID", values = c('#a6cee3', '#fc8d62', '#d95f02', '#ffffb3'), labels = c("Heterosexual", "Gay or Lesbian", "Bisexual", "I don't know")) +
+  ggtitle("Bar Graph of Sex ID and Sexual Activity") +
+  labs(x = "Sexually Inactive Teens", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(1, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 14000, 1000), limits = c(0, 14000))
+sexid_sexbar
+
+sexid_sexbar2 <- ggplot(yrisk, aes(x = q58, fill = factor(q66))) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual("Sex ID", values = c('#a6cee3', '#fc8d62', '#d95f02', '#ffffb3'), labels = c("Heterosexual", "Gay or Lesbian", "Bisexual", "I don't know")) +
+  ggtitle("Bar Graph of Sex ID and Sexual Activity") +
+  labs(x = "Sexually Active Teens", y = "Number of Teens") +
+  scale_x_continuous(breaks = seq(2, 2, 1), limits = c(1.5, 2.5)) +
+  scale_y_continuous(breaks = seq(0, 160000, 10000), limits = c(0, 160000))
+sexid_sexbar2
+```
+For the teen marijuana use logistic regression model, the predictors age, sex, year, item 46 and item 47 were added to explain question 45. Question 45 asked teens “During your life, how many times have you used marijuana?”. To make this truly a binary item, the answers were recoded so that anyone who responded 0 times maintained the score 0, while anyone who responded 1 or 2 times all the way to 100 or more times were coded as 1 (there were a range of answers between these two choices). In other words, whether or not teens indicated marijuana use was indicated by a 0 or 1. Item 46 involves the question “How old were you when you first tried marijuana?”, and item 47 asked how many times in the past 30 days did the teen use marijuana. All predictors were significant for this model. When correlations were plotted, it was found that q46 and q47 were moderately correlated at r = 0.53, which may cause concern of multicollinearity and accuracy of prediction. 
+	As before, the additional bar graphs that were used for further analysis of the predictors can be found below. The most common age of first-time marijuana use was 17 years of age, soon followed by 16. For those that reported using marijuana 100 or more times in a month, they reported beginning this from the age range of 16-18. It is apparent that those that did not use marijuana were not responding to this question. In terms of the other charts, by far, the most common response for age and amount of use in the past 30 days was “Never”.
+```{R, echo=FALSE, warning=FALSE}
+age_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(age))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Age", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("12 or under", "13", "14", "15", "16", "17", "18")) +
+    scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5)) +
+    scale_y_continuous(breaks = seq(0, 7000, 1000), limits = c(0, 6500))
+age_marijuanabar
+
+agefirst_time_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(q46new))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age of First Time and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Age of First Time", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Never", "8 or younger", "9 or 10 ", "11 or 12", "13 or 14", "15 or 16", "17 or older")) +
+  scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5))
+agefirst_time_marijuanabar
+
+past30_marijuanabar <- ggplot(yrisk, aes(x = q45, fill = factor(q47))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Use in Last 30 Days and Marijuana Use") +
+  labs(x = "Marijuana Use 
+       (1 = 0 times, 2 = 1-2 times, 3 = 3-9 times, 4 = 10-19 times, 
+       5 = 20-39 times, 6 = 40-99 times, 7 = over 100 times)", y = "Number of Teens") +
+  scale_fill_manual("Amount in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77'), labels = c("Never", "1 or 2 times", "3 to 9 times", "10 to 19 times", "20 to 39 times", "40 or more")) +
+  scale_x_continuous(breaks = seq(0, 7, 1), limits = c(0.5, 7.5))
+past30_marijuanabar
+```
+The logistic model for cigarette smoking behavior involved q30 as the criterion, which asked teens whether or not they have ever smoked a cigarette, “even one or two puffs”. Along with age, sex, and year, q31-33 and q38 were implemented as predictors. Item 31 asks for teens to identify how old they were when they first tried smoking cigarettes, item 32 asked how many days in the past 30 days did they smoke a cigarette, and item 33 asked how many cigarettes were smoked per day. Question 38 was in regards to the amount of cigars or cigarillos smoked in the last 30 days. All predictors were found to be significant. The correlation plots indicate that q32 and q33 were nearly perfectly correlated (r = 0.93), q32 and q38 moderately correlated (r = 0.53), as well as q33 and q38 (r = 0.55). Serious concern for multicollinearity arises from this finding, so it is not suggested that this logistic regression model be used for probability prediction.
+The bar charts below indicate further relationships among these variables of interest. It was found that the most common age for the first puff of a cigarette is 13 or 14 years of age. Most teens indicated they had not smoked in the past 30 days. For those that did, either 1 or 2 times or all 30 days were the most common responses for the 30 day period. This tells us that cigarette use was either very limited or highly addictive depending on the teen. Additionally, following the category that indicated “none”, 1 or 2 times in the last 30 days was also the most common choice selected for those that smoked cigars or cigarillos. Two to five cigarettes per day was the most frequent number of cigarettes for those that smoked.
+```{R, echo=FALSE, warning=FALSE}
+agefirst_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q31))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Age of First Cigarette Use") +
+  labs(x = "Cigarette Use", y = "Number of Teens") +
+  scale_fill_manual("Age of First Time 
+                    Smoking Cigarette", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Never", "8 or Younger", "9 or 10", "11 or 12", "13 or 14", "15 or 16", "17 or older")) +
+  scale_x_continuous(breaks = seq(0, 1.5, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 1800, 100), limits = c(0, 1800))
+agefirst_cigbar
+
+past30_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q32))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Days of Cigarette Use In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Days Used in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+past30_cigbar
+
+past30number_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q33))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Cigarette Used In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Cigarettes in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("Did not smoke in past 30 days", "Less than 1 per day", "1 per day", "2 to 5 per day", "6 to 10 per day", "11 to 20 per day", "more than 20 per day")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+past30number_cigbar
+
+past30cigar_cigbar <- ggplot(yrisk, aes(x = q30, fill = factor(yrisk$q38))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Many Cigars Used In Past 30") +
+  labs(x = "Has Smoked", y = "Number of Teens") +
+  scale_fill_manual("Number of Days Used in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5))
+past30cigar_cigbar
+```
+The last of the logistic regressions used was to identify the probability of vape usage in teens. It must be cautioned that the items used to observe e-cigarette (vape) usage is newer, along with the phenomenon of vaping. Along with age, sex, and year predictors, q35 and q36 were also used as explanatory variables. Item 35 asked respondents to identify how many days in the last 30 was an electronic vapor product used, where item 36 required items to indicate where they obtained the electronic vapor product from in the last 30 days. Here, only age, sex, and year were significant at the p < 0.001 level, and neither item 35 nor 36 were significant. As expected, when the correlations were plotted, a high association existed between these two items, where r = 0.7, which brings the issues and drawbacks of multicollinearity into the model. 
+	Below are the barcharts used to visually exemplify the results of this survey. The most common response for how many times a vape was used in the last 30 days was 0, soon followed by 1 or 2. This might indicate that vaping is solely a social phenomenon. It should also be noted that the choice “all 30 days” was among the top 4 answers, which may speak to the addictive properties of vaping. The most common answer for how the vape was obtained was that a vape was not obtained, but the most frequent answer for those that did obtain a vape was from borrowing from someone else. This leads me to question where the original person got the electronic vaping device, or if, in this instance, “borrowing” was a lax term for theft of the e-cigarette device.
+```{R, echo=FALSE, warning=FALSE}
+past30_vapebar <- ggplot(yrisk, aes(x = q34, fill = factor(q35))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of Use of Vape in Past 30 Days") +
+  labs(x = "Vape Has Been Used", y = "Number of Teens") +
+  scale_fill_manual("Days of Use in Past 30 Days", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3'), labels = c("0", "1 or 2 days", "3 to 5", "6 to 9", "10 to 19", "20 to 29", "All 30")) +
+  scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 6000, 1000), limits = c(0, 6000))
+past30_vapebar
+
+obtained_vapebar <- ggplot(yrisk, aes(x = q34, fill = factor(q36))) +
+  geom_bar(position = "dodge") +
+  ggtitle("Bar Graph of How Vape Was Obtained") +
+  labs(x = "Vape Has Been Used", y = "Number of Teens") +
+  scale_fill_manual("How Vape Was Obtained", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', '#1b9e77', '#ffffb3', '#e41a1c'), labels = c("Did not use or obtain", "Bought in store", "From internet", "Someone else purchased with my $", "Borrowed", "Given from someone else", "Took from store or someone", "Other source")) +
+    scale_x_continuous(breaks = seq(0, 1, 1), limits = c(0.5, 1.5)) +
+  scale_y_continuous(breaks = seq(0, 8000, 1000), limits = c(0, 8000))
+obtained_vapebar
+```
+# Yearly Trends
+
+Data was grouped by year in order to analyze any trends in data over time. Once data was grouped by year skimr was performed again and the results showed very little variability by question. However, there were a few questions that looked interesting based upon visual analysis of the skimr graphs. These questions, along with the questions that were selected through the principal component analysis were then further analyzed to see if there might be any change over time. The code for this part of the analysis was saved as KWork.Rmd. 
+While most questions in the survey were answered by youth using a Likert-type scale, some of them were dichotomous. Likert-type data, while categorical, can be thought of as ordinal in nature. Means were found for each question by year to see if there were any changes from one category to another. For instance, if a Likert-type question had a mean of 2.5 for one year, and the following year it was 2.6, this may indicate that there has been a change in category across years. Similarly, if the mean for a dichotomously scored item went from 1 to 2, it would indicate a change over time. It is acknowledged that using means for categorical data has its limitations, but it was an easy way to discern which questions warranted further analysis. To analyze any trends over time we had to use portions of respondents versus actual number of respondents as Table 1 clearly shows that the number of youth responding to the survey has wide variation over time.
+```{R, echo=FALSE, warning=FALSE}
+gyear <- yrisk %>%
+  mutate(year) %>%
+  select(year, age, sex, grade, stheight, stweight, bmi, bmipct, q8, q9, q12, q13, q15, q16, q17, q18, q26, q27, q28, q29, q30, q32, q33, q36, q40, q41, q45, q46, q47, q50, q51, q55, q56, q57, q58, q59, q60, q61, q62, q63, q64, q67, q68, q69, q70, q83)
+
+grouped_gyear <- gyear %>%
+  group_by(year)
+grouped_gyear
+
+num_peryear <- grouped_gyear %>%
+  summarize(n=n())
+num_peryear
+
+gres <- ggplot(num_peryear, aes(x = year, y = n)) +
+  geom_line(color = "blue") +
+  geom_point(color = "blue") +
+  labs(title = "Number of Respondents per Year", x = "Year", y = "Number") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019))
+gres
+```
+In the end, there were four questions that warranted evaluation of change in behavior over time. Surprisingly, the question that showed the greatest change over time had to do with seatbelt use by youth. One of the struggles with the dataset was the amount of answers that were simply not answered by youth. All questions had some NAs, and some questions had quite a few. The slide show generated for this project kept the NAs in the graphs, this report does not. Non-response to a question is a response. But, to aid in drawing conclusions about changes in behavior over time it is easier to not include the NAs in the chart. Since 1991 the portion of youth who always wear a seatbelt when riding in a car with someone else driving has shown the largest increase, see Table 2. Until 2015 there was a trend in youth waiting until they were older to have more than a few sips of alcohol, see Table 3. That trend seems to be reverting starting in 2015. A similar pattern was found with youth engaging in sexual intercourse, see Table 4. Lastly, cigarette smoking has decreased over time, see Tabe 5.
+```{R, include = FALSE}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+gyear <- yrisk %>%
+  mutate(year) %>%
+  select(year, age, sex, grade, stheight, stweight, bmi, bmipct, q8, q9, q12, q13, q15, q16, q17, q18, q26, q27, q28, q29, q30, q32, q33, q36, q40, q41, q45, q46, q47, q50, q51, q55, q56, q57, q58, q59, q60, q61, q62, q63, q64, q67, q68, q69, q70, q83)
+library(tidyverse)
+grouped_gyear <- gyear %>%
+  group_by(year)
+grouped_gyear
+
+gq8 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q8))) +
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) +
+  labs(title = "How often do you wear a seatbelt when riding in a car driven by someone else?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Seatbelt Use", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02'), labels = c("Never", "Rarely", "Sometimes", "Most", "Always"))
+
+grouped_gyear$q40new[grouped_gyear$q40==1] <- 1
+grouped_gyear$q40new[grouped_gyear$q40==2] <- 7
+grouped_gyear$q40new[grouped_gyear$q40==3] <- 6
+grouped_gyear$q40new[grouped_gyear$q40==4] <- 5
+grouped_gyear$q40new[grouped_gyear$q40==5] <- 4
+grouped_gyear$q40new[grouped_gyear$q40==6] <- 3
+grouped_gyear$q40new[grouped_gyear$q40==7] <- 2
+grouped_gyear
+
+gq40 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q40))) +
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) +
+  labs(title = "At what age did you first have more than a few sips of alcohol?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("First Alcohol", values = c('#a6cee3', '#1f78b4', '#fc8d62', '#7570b3', '#d95f02', "#660066", "#101010"), labels = c("Never", "17 or older", "15 or 16", "13 or 14", "11 or 12", "9 or 10", "8 or younger"))
+
+
+gq30 <- filter(grouped_gyear, !is.na(q30)) %>%
+  ggplot +
+  geom_bar(mapping = aes(x = year, fill = factor(q30)), position = "fill", stat = "count", na.rm = FALSE) +
+  labs(title = "Have you ever tried a cigarette, even one or two puffs?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Tried Cigarettes", values = c('#660066', '#1f78b4'), na.translate = FALSE, labels = c("Yes", "No")) +
+  theme_classic()
+
+gq58 <-ggplot(grouped_gyear, aes(x = year, fill = factor(q58))) +
+  geom_bar( position = "fill", stat = "count", na.rm = TRUE) +
+  labs(title = "Have you ever had sexual intercourse?", x = "Year") +
+  scale_x_continuous(breaks = c(1991, 1993, 1995, 1997, 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019)) +
+  scale_fill_manual("Had Sex", values = c('#a6cee3', '#1f78b4'), labels = c("Yes", "No"))
+```
+```{R}
+gq8
+gq40
+gq30
+gq58
+```
+# Conclusions
+
+There are many factors which affect the health of youth. Gathering longitudinal data regarding risky behaviors of youth can be helpful in developing possible interventions. However, we believe that any interpretations of this data are limited and honestly, decisions made regarding youth and risky behavior should include other measures. The first issue with this dataset is simply that it is a survey of youth, who may be responding based upon social desirability. Secondly, the manner in which race has been measured across time is a major limitation in terms of drawing any valid conclusions for racial subpopulations of students. In fact, it is noted that within the 2019 National YRBS Data User’s Guide (2020) the questions regarding race/ethnicity may be changed at local and regional levels (p. 11). Thirdly, which states share their data and which states do not could skew the results as there are regional differences in health across the U.S. 
+Having stated the major limitations above, if the data is an accurate reflection of youth and risky behavior (a statement we are unable to access), then we can conclude that the following six components make up the majority of risky behavior: sexual activity, marijuana use, cigarette smoking, other drug use, suicide attempt, and weapon carrying behavior.  The demographic factors of age, sex(gender), grade in school, and year of survey explain very little of these components. This indicates that there are other factors beyond simple demographics which influence the choices youth make. Overall, there are no major trends in risky behavior upon the part of youth. There has been a positive trend in youth always wearing a seatbelt and youth not trying cigarettes. It would be interesting to see if less cigarette trying is related to an increase in vaping, but data on vaping has only been collected twice and therefore we could draw no conclusions about this possible relationship. The vast majority of youth are making wise choices regarding their health. 
+
+# References
+
+National Center for HIV/AIDS, Viral Hepatitis, STD, and TB Prevention Division of Adolescent 
+and School Health. (2020, August). 2019 National YRBS User’s Guide. 
+https://www.cdc.gov/healthyyouth/data/yrbs/yrbs_data_summary_and_trends.htm
+National Center for HIV/AIDS, Viral Hepatitis, STD, and TB Prevention Division of Adolescent 
+and School Health. (2020, August). 2019 YRBS National, State, and District, Combined 
+Data Set User’s Guide. 
+https://www.cdc.gov/healthyyouth/data/yrbs/yrbs_data_summary_and_trends.htm
+National Center for HIV/AIDS, Viral Hepatitis, STD, and TB Prevention Division of Adolescent 
+and School Health. (2020, August). 2019 Software for Analysis for YRBS Data. 
+https://www.cdc.gov/healthyyouth/data/yrbs/yrbs_data_summary_and_trends.htm
